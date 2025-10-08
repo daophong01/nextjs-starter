@@ -1,5 +1,6 @@
 import DestinationCard from "../../components/DestinationCard";
 import FiltersBar from "../../components/FiltersBar";
+import SortBar from "../../components/SortBar";
 import { DESTINATIONS } from "../../data/destinations";
 
 export default function DestinationsPage({
@@ -14,6 +15,7 @@ export default function DestinationsPage({
     priceMin?: string;
     priceMax?: string;
     ratingMin?: string;
+    sort?: string;
   };
 }) {
   const q = (searchParams?.q || "").toLowerCase().trim();
@@ -22,6 +24,7 @@ export default function DestinationsPage({
   const ratingMin = Number(searchParams?.ratingMin || 0);
   const country = searchParams?.country || "";
   const tag = searchParams?.tag || "";
+  const sort = searchParams?.sort || "";
 
   const filtered = DESTINATIONS.filter((d) => {
     const matchQ =
@@ -36,6 +39,21 @@ export default function DestinationsPage({
     return matchQ && matchCountry && matchTag && matchPrice && matchRating;
   });
 
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sort) {
+      case "price-asc":
+        return a.price - b.price;
+      case "price-desc":
+        return b.price - a.price;
+      case "rating-desc":
+        return b.rating - a.rating;
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
+
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
       <h1 className="text-2xl sm:text-3xl font-bold mt-8">Danh sách điểm đến</h1>
@@ -46,13 +64,18 @@ export default function DestinationsPage({
         </p>
       )}
 
-      <FiltersBar />
+      <div className="mt-4 flex flex-col gap-3">
+        <FiltersBar />
+        <div className="flex justify-end">
+          <SortBar />
+        </div>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
-        {filtered.map((d) => (
+        {sorted.map((d) => (
           <DestinationCard key={d.slug} d={d} />
         ))}
-        {filtered.length === 0 && (
+        {sorted.length === 0 && (
           <div className="rounded-xl border border-black/[.08] dark:border-white/[.145] p-6">
             Không tìm thấy điểm đến phù hợp. Hãy thử tiêu chí khác.
           </div>

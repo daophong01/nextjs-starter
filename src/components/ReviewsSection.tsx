@@ -1,12 +1,37 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Review } from "../data/reviews";
 import { REVIEWS } from "../data/reviews";
 
 export default function ReviewsSection({ slug }: { slug: string }) {
-  const [list, setList] = useState<Review[]>(
-    REVIEWS.filter((r) => r.slug === slug)
-  );
+  const storageKey = `reviews:${slug}`;
+
+  const [list, setList] = useState<Review[]>([]);
+
+  // Load from localStorage or fallback to seed data
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Review[];
+        setList(parsed);
+      } else {
+        setList(REVIEWS.filter((r) => r.slug === slug));
+      }
+    } catch {
+      setList(REVIEWS.filter((r) => r.slug === slug));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  // Persist to localStorage when list changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    } catch {
+      // ignore
+    }
+  }, [list, storageKey]);
 
   const avg = useMemo(() => {
     if (list.length === 0) return 0;
@@ -92,7 +117,7 @@ export default function ReviewsSection({ slug }: { slug: string }) {
           className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent min-h-[80px]"
         />
         <button className="rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90 w-max">Gửi đánh giá</button>
-        <p className="text-xs/6 text-foreground/60">Đánh giá chỉ lưu cục bộ trong phiên duyệt (demo).</p>
+        <p className="text-xs/6 text-foreground/60">Đánh giá sẽ được lưu trong trình duyệt của bạn (localStorage, demo).</p>
       </form>
     </section>
   );
