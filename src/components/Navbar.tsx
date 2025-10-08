@@ -9,6 +9,8 @@ const links = [
   { href: "/destinations", label: "Điểm đến" },
   { href: "/tours", label: "Tour" },
   { href: "/book", label: "Đặt chỗ" },
+  { href: "/wishlist", label: "Yêu thích" },
+  { href: "/account", label: "Tài khoản" },
 ];
 
 export default function Navbar() {

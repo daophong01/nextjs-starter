@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Tour } from "@/lib/data";
+import WishlistButton from "./WishlistButton";
 
 export default function TourCard({ t }: { t: Tour }) {
   return (
@@ -34,6 +35,9 @@ export default function TourCard({ t }: { t: Tour }) {
           >
             Đặt ngay
           </Link>
+        </div>
+        <div className="mt-3">
+          <WishlistButton id={t.id} kind="tour" />
         </div>
       </div>
     </div>

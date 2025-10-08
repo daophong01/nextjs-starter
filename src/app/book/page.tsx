@@ -23,6 +23,9 @@ export default function BookPage() {
     tour: tourId || "",
     note: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const availableTours = useMemo(() => {
     if (!form.destination) return tours;
@@ -33,11 +36,28 @@ export default function BookPage() {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // In a real app, call an API route. For now, just log.
-    console.log("Booking request:", form);
-    alert("Đã gửi yêu cầu đặt chỗ! Chúng tôi sẽ liên hệ sớm.");
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "Có lỗi xảy ra");
+      }
+      setSuccess("Đã gửi yêu cầu đặt chỗ! Mã đơn: " + data.data.id);
+      setForm((f) => ({ ...f, note: "" }));
+    } catch (e: any) {
+      setError(e.message || "Có lỗi xảy ra");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -51,6 +71,17 @@ export default function BookPage() {
         onSubmit={onSubmit}
         className="mt-6 p-6 rounded-2xl border border-black/5 dark:border-white/10 bg-white/60 dark:bg-white/5 space-y-4"
       >
+        {success && (
+          <div className="text-sm text-green-700 dark:text-green-400 bg-green-50/70 dark:bg-green-900/20 border border-green-200/60 dark:border-green-800/50 px-3 py-2 rounded-md">
+            {success}
+          </div>
+        )}
+        {error && (
+          <div className="text-sm text-red-700 dark:text-red-400 bg-red-50/70 dark:bg-red-900/20 border border-red-200/60 dark:border-red-800/50 px-3 py-2 rounded-md">
+            {error}
+          </div>
+        )}
+
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium">Họ và tên</label>
@@ -142,9 +173,10 @@ export default function BookPage() {
         <div className="pt-2">
           <button
             type="submit"
-            className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+            disabled={submitting}
+            className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            Gửi yêu cầu
+            {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
           </button>
         </div>
       </form>
