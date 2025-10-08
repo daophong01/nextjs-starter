@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { DESTINATIONS } from "../../../data/destinations";
+import MapEmbed from "../../../components/MapEmbed";
+import ReviewsSection from "../../../components/ReviewsSection";
 
 export default function DestinationDetail({
   params,
@@ -62,6 +64,11 @@ export default function DestinationDetail({
             </ul>
           </div>
         </aside>
+      </div>
+
+      <div className="mt-10 grid gap-6 sm:grid-cols-2">
+        <MapEmbed query={`${d.name}, ${d.country}`} />
+        <ReviewsSection slug={d.slug} />
       </div>
 
       <div className="mt-10">
