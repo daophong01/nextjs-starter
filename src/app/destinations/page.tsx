@@ -1,6 +1,7 @@
 import DestinationCard from "../../components/DestinationCard";
 import FiltersBar from "../../components/FiltersBar";
 import SortBar from "../../components/SortBar";
+import PaginationBar from "../../components/PaginationBar";
 import { DESTINATIONS } from "../../data/destinations";
 
 export default function DestinationsPage({
@@ -11,11 +12,13 @@ export default function DestinationsPage({
     from?: string;
     to?: string;
     country?: string;
-    tag?: string;
+    tags?: string; // comma-separated, e.g. "beach,city"
     priceMin?: string;
     priceMax?: string;
     ratingMin?: string;
     sort?: string;
+    page?: string;
+    pageSize?: string;
   };
 }) {
   const q = (searchParams?.q || "").toLowerCase().trim();
@@ -23,8 +26,13 @@ export default function DestinationsPage({
   const priceMax = Number(searchParams?.priceMax || Infinity);
   const ratingMin = Number(searchParams?.ratingMin || 0);
   const country = searchParams?.country || "";
-  const tag = searchParams?.tag || "";
+  const tags = (searchParams?.tags || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   const sort = searchParams?.sort || "";
+  const pageSize = Math.max(1, Number(searchParams?.pageSize || 9));
+  const page = Math.max(1, Number(searchParams?.page || 1));
 
   const filtered = DESTINATIONS.filter((d) => {
     const matchQ =
@@ -33,10 +41,11 @@ export default function DestinationsPage({
       d.country.toLowerCase().includes(q) ||
       d.tags.some((t) => t.toLowerCase().includes(q));
     const matchCountry = !country || d.country === country;
-    const matchTag = !tag || d.tags.includes(tag);
+    const matchTags =
+      tags.length === 0 || tags.every((t) => d.tags.includes(t));
     const matchPrice = d.price >= priceMin && d.price <= priceMax;
     const matchRating = d.rating >= ratingMin;
-    return matchQ && matchCountry && matchTag && matchPrice && matchRating;
+    return matchQ && matchCountry && matchTags && matchPrice && matchRating;
   });
 
   const sorted = [...filtered].sort((a, b) => {
@@ -54,6 +63,11 @@ export default function DestinationsPage({
     }
   });
 
+  const total = sorted.length;
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const paged = sorted.slice(start, end);
+
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
       <h1 className="text-2xl sm:text-3xl font-bold mt-8">Danh sách điểm đến</h1>
@@ -66,21 +80,24 @@ export default function DestinationsPage({
 
       <div className="mt-4 flex flex-col gap-3">
         <FiltersBar />
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
           <SortBar />
+          <span className="text-sm/6 text-foreground/70">Có {total} điểm đến</span>
         </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
-        {sorted.map((d) => (
+        {paged.map((d) => (
           <DestinationCard key={d.slug} d={d} />
         ))}
-        {sorted.length === 0 && (
+        {paged.length === 0 && (
           <div className="rounded-xl border border-black/[.08] dark:border-white/[.145] p-6">
             Không tìm thấy điểm đến phù hợp. Hãy thử tiêu chí khác.
           </div>
         )}
       </div>
+
+      <PaginationBar total={total} pageSize={pageSize} />
     </main>
   );
 }

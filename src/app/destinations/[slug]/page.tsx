@@ -1,8 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { DESTINATIONS } from "../../../data/destinations";
 import MapEmbed from "../../../components/MapEmbed";
 import ReviewsSection from "../../../components/ReviewsSection";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const d = DESTINATIONS.find((x) => x.slug === params.slug);
+  if (!d) {
+    return {
+      title: "Điểm đến không tồn tại - TravelGo",
+      description: "Không tìm thấy điểm đến bạn yêu cầu.",
+    };
+  }
+  return {
+    title: `${d.name} - ${d.country} | TravelGo`,
+    description: d.description,
+    openGraph: {
+      title: `${d.name} - ${d.country} | TravelGo`,
+      description: d.description,
+      images: [{ url: d.image }],
+    },
+  };
+}
 
 export default function DestinationDetail({
   params,
