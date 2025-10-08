@@ -1,103 +1,61 @@
-import Image from "next/image";
+import SearchBar from "../components/SearchBar";
+import DestinationCard from "../components/DestinationCard";
+import { DESTINATIONS } from "../data/destinations";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const featured = DESTINATIONS.slice(0, 3);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <main className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="mt-10 sm:mt-16 grid gap-6 sm:grid-cols-[1.2fr_1fr] items-center">
+        <div>
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
+            Khám phá thế giới theo cách của bạn
+          </h1>
+          <p className="mt-3 text-foreground/80">
+            Tìm kiếm điểm đến yêu thích, xem gợi ý và đặt chỗ nhanh chóng. TravelGo đồng hành cùng mọi hành trình của bạn.
+          </p>
+          <div className="mt-6">
+            <SearchBar />
+          </div>
+          <div id="deals" className="mt-4 text-sm/6 text-foreground/70">
+            Ưu đãi giữa tuần: Giảm đến 20% cho các điểm đến bãi biển.
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="relative rounded-2xl overflow-hidden border border-black/[.08] dark:border-white/[.145] h-64 sm:h-80">
+          {/* Decorative hero image */}
+          {/* Using external images to avoid adding binaries */}
+          <img
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop"
+            alt="Bãi biển xanh"
+            className="h-full w-full object-cover"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Điểm đến nổi bật</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((d) => (
+            <DestinationCard key={d.slug} d={d} />
+          ))}
+        </div>
+      </section>
+
+      <section id="stories" className="mt-12">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Câu chuyện hành trình</h2>
+        <div className="grid gap-6 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <article key={i} className="rounded-xl border border-black/[.08] dark:border-white/[.145] p-4 bg-white dark:bg-black/40">
+              <h3 className="font-semibold">Hành trình #{i}</h3>
+              <p className="text-sm/6 text-foreground/70 mt-1">
+                Những trải nghiệm đáng nhớ từ du khách ở Bali, Paris và Tokyo. Khám phá văn hóa, ẩm thực và thiên nhiên độc đáo.
+              </p>
+              <a href="/destinations" className="text-sm/6 underline mt-2 inline-block">Đọc thêm →</a>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
