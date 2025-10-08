@@ -37,37 +37,28 @@ export default function FiltersBar() {
     .map((t) => t.trim())
     .filter(Boolean);
 
-  const toggleTag = (tag: string) => {
+  const selectedCountries = (sp.get("countries") || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  const toggleMulti = (key: "tags" | "countries", current: string[], value: string) => {
     const params = new URLSearchParams(sp.toString());
-    const set = new Set(selectedTags);
-    if (set.has(tag)) {
-      set.delete(tag);
-    } else {
-      set.add(tag);
-    }
-    const value = Array.from(set).join(",");
-    if (value) params.set("tags", value);
-    else params.delete("tags");
+    const set = new Set(current);
+    if (set.has(value)) set.delete(value);
+    else set.add(value);
+    const joined = Array.from(set).join(",");
+    if (joined) params.set(key, joined);
+    else params.delete(key);
     pushParams(params);
   };
+
+  const toggleTag = (tag: string) => toggleMulti("tags", selectedTags, tag);
+  const toggleCountry = (country: string) => toggleMulti("countries", selectedCountries, country);
 
   return (
     <div className="mt-4 rounded-xl border border-black/[.08] dark:border-white/[.145] p-4 bg-white dark:bg-black/40 grid gap-4">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div>
-          <label className="text-xs font-medium">Quốc gia</label>
-          <select
-            value={sp.get("country") || ""}
-            onChange={(e) => update("country", e.target.value || undefined)}
-            className="w-full rounded border border-black/[.08] dark:border-white/[.145] bg-transparent px-3 py-2"
-          >
-            <option value="">Tất cả</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
         <div>
           <label className="text-xs font-medium">Giá từ</label>
           <input
@@ -104,6 +95,30 @@ export default function FiltersBar() {
             onChange={(e) => update("ratingMin", e.target.value || undefined)}
             className="w-full rounded border border-black/[.08] dark:border-white/[.145] bg-transparent px-3 py-2"
           />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs font-medium">Quốc gia (chọn nhiều)</label>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {countries.map((c) => {
+            const active = selectedCountries.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggleCountry(c)}
+                className={`text-sm/6 rounded-full px-3 py-1 border transition ${
+                  active
+                    ? "bg-foreground text-background border-transparent"
+                    : "border-black/[.08] dark:border-white/[.145] hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a]"
+                }`}
+                aria-pressed={active}
+              >
+                {c}
+              </button>
+            );
+          })}
         </div>
       </div>
 

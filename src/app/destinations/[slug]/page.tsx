@@ -44,8 +44,20 @@ export default function DestinationDetail({
     );
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TouristDestination",
+    "name": d.name,
+    "image": [d.image],
+    "description": d.description,
+    "address": { "@type": "PostalAddress", "addressCountry": d.country },
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": d.rating, "bestRating": 5, "ratingCount": 100 },
+    "offers": { "@type": "Offer", "price": d.price, "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mt-8 grid gap-6 sm:grid-cols-[1.2fr_1fr]">
         <div className="rounded-2xl overflow-hidden border border-black/[.08] dark:border-white/[.145] bg-white dark:bg-black/40">
           <div className="relative h-72 w-full">
