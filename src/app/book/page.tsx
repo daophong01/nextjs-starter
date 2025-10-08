@@ -24,13 +24,19 @@ export default function BookPage() {
     note: "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const availableTours = useMemo(() => {
     if (!form.destination) return tours;
     return tours.filter((t) => t.destinationSlug === form.destination);
   }, [form.destination]);
+
+  const selectedTour = useMemo(
+    () => tours.find((t) => t.id === form.tour) || null,
+    [form.tour]
+  );
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -40,7 +46,6 @@ export default function BookPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    setSuccess(null);
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -51,12 +56,30 @@ export default function BookPage() {
       if (!res.ok) {
         throw new Error(data?.error || "Có lỗi xảy ra");
       }
-      setSuccess("Đã gửi yêu cầu đặt chỗ! Mã đơn: " + data.data.id);
-      setForm((f) => ({ ...f, note: "" }));
+      setBookingId(data.data.id);
     } catch (e: any) {
       setError(e.message || "Có lỗi xảy ra");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function payNow() {
+    if (!bookingId) return;
+    setRedirecting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout_sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data?.error || "Không thể tạo phiên thanh toán");
+      window.location.href = data.url as string;
+    } catch (e: any) {
+      setError(e.message || "Có lỗi xảy ra khi thanh toán");
+      setRedirecting(false);
     }
   }
 
@@ -71,9 +94,9 @@ export default function BookPage() {
         onSubmit={onSubmit}
         className="mt-6 p-6 rounded-2xl border border-black/5 dark:border-white/10 bg-white/60 dark:bg-white/5 space-y-4"
       >
-        {success && (
+        {bookingId && (
           <div className="text-sm text-green-700 dark:text-green-400 bg-green-50/70 dark:bg-green-900/20 border border-green-200/60 dark:border-green-800/50 px-3 py-2 rounded-md">
-            {success}
+            Đã tạo yêu cầu. Mã: {bookingId}
           </div>
         )}
         {error && (
@@ -157,6 +180,11 @@ export default function BookPage() {
               </option>
             ))}
           </select>
+          {selectedTour && (
+            <div className="text-sm text-foreground/70 mt-1">
+              Tạm tính: ${selectedTour.price} • {selectedTour.durationDays} ngày
+            </div>
+          )}
         </div>
 
         <div>
@@ -170,14 +198,25 @@ export default function BookPage() {
           />
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 flex gap-2">
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !!bookingId}
             className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
           >
             {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
           </button>
+
+          {bookingId && selectedTour && (
+            <button
+              type="button"
+              onClick={payNow}
+              disabled={redirecting}
+              className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-blue-600 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
+              {redirecting ? "Đang chuyển..." : "Thanh toán ngay"}
+            </button>
+          )}
         </div>
       </form>
     </div>
