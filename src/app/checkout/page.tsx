@@ -1,4 +1,6 @@
+"use client";
 import { DESTINATIONS } from "../../data/destinations";
+import { useState } from "react";
 
 export default function CheckoutPage({
   searchParams,
@@ -6,8 +8,47 @@ export default function CheckoutPage({
   searchParams?: { destination?: string; guests?: string; from?: string; to?: string };
 }) {
   const d = DESTINATIONS.find((x) => x.slug === (searchParams?.destination || ""));
-  const guests = Number(searchParams?.guests || 2);
+  const guests = Math.max(1, Number(searchParams?.guests || 2));
   const price = d ? d.price * guests : 0;
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{ id: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setSubmitting(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destination: d?.slug,
+          guests,
+          from: searchParams?.from,
+          to: searchParams?.to,
+          name,
+          email,
+          note: notes,
+          price: price + 15,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setResult({ id: data.id });
+      } else {
+        setError("Đặt chỗ thất bại. Vui lòng thử lại.");
+      }
+    } catch {
+      setError("Không thể kết nối máy chủ. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -27,16 +68,33 @@ export default function CheckoutPage({
             <p className="text-sm/6 text-foreground/70">Chưa chọn điểm đến.</p>
           )}
 
-          <form className="mt-4 grid gap-3">
+          <div className="mt-4 grid gap-3">
             <label className="text-xs font-medium">Tên người đặt</label>
-            <input type="text" placeholder="Nguyễn Văn A" className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent" />
+            <input
+              type="text"
+              placeholder="Nguyễn Văn A"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent"
+            />
 
             <label className="text-xs font-medium">Email</label>
-            <input type="email" placeholder="ban@vi.du.lich" className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent" />
+            <input
+              type="email"
+              placeholder="ban@vi.du.lich"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent"
+            />
 
             <label className="text-xs font-medium">Ghi chú</label>
-            <textarea placeholder="Yêu cầu đặc biệt..." className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent min-h-[80px]" />
-          </form>
+            <textarea
+              placeholder="Yêu cầu đặc biệt..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent min-h-[80px]"
+            />
+          </div>
         </section>
 
         <aside className="rounded-2xl border border-black/[.08] dark:border-white/[.145] p-4 h-max">
@@ -46,10 +104,20 @@ export default function CheckoutPage({
             <p>Phí dịch vụ: $15</p>
             <p className="font-semibold mt-2">Tổng: ${price + 15}</p>
           </div>
-          <button className="mt-4 rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90">
-            Hoàn tất
+          <button
+            className="mt-4 rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90 disabled:opacity-70"
+            onClick={submit}
+            disabled={submitting || !name || !email}
+          >
+            {submitting ? "Đang xử lý..." : "Hoàn tất"}
           </button>
-          <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán demo (không thực tế).</p>
+          {error && <p className="text-xs/6 text-red-600 mt-2">{error}</p>}
+          {result && (
+            <p className="text-xs/6 text-green-700 mt-2">
+              Đặt chỗ thành công! Mã đơn: <span className="font-mono">{result.id}</span>
+            </p>
+          )}
+          <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán demo; dữ liệu được lưu vào backend JSON.</p>
         </aside>
       </div>
     </main>
