@@ -2,6 +2,7 @@ import DestinationCard from "../../components/DestinationCard";
 import FiltersBar from "../../components/FiltersBar";
 import SortBar from "../../components/SortBar";
 import PaginationBar from "../../components/PaginationBar";
+import { DESTINATIONS } from "../../data/destinations";
 
 type Search = {
   q?: string;
@@ -17,34 +18,90 @@ type Search = {
   pageSize?: string;
 };
 
-function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-
 async function fetchDestinations(searchParams: Search) {
   const params = new URLSearchParams(Object.entries(searchParams).filter(([_, v]) => v));
-  const base = getBaseUrl();
-  const res = await fetch(`${base}/api/destinations?${params.toString()}`, {
-    // cache: "no-store"  // uncomment to disable caching
+  const url = `/api/destinations?${params.toString()}`;
+  try {
+    const res = await fetch(url, {
+      // cache: "no-store"  // uncomment to disable caching
+    });
+    if (res.ok) {
+      return res.json() as Promise<{
+        total: number;
+        page: number;
+        pageSize: number;
+        items: Array<{
+          slug: string;
+          name: string;
+          description: string;
+          image: string;
+          rating: number;
+          price: number;
+          country: string;
+          tags: string[];
+        }>;
+      }>;
+    }
+  } catch {
+    // ignore and fallback
+  }
+
+  // Fallback to static data when API is unavailable (e.g., DB not ready)
+  const q = (searchParams.q || "").toLowerCase().trim();
+  const priceMin = Number(searchParams.priceMin || 0);
+  const priceMax = Number(searchParams.priceMax || Infinity);
+  const ratingMin = Number(searchParams.ratingMin || 0);
+  const countries = (searchParams.countries || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const tags = (searchParams.tags || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const sort = searchParams.sort || "";
+  const page = Math.max(1, Number(searchParams.page || 1));
+  const pageSize = Math.max(1, Number(searchParams.pageSize || 9));
+
+  const filtered = DESTINATIONS.filter((d) => {
+    const matchQ =
+      !q ||
+      d.name.toLowerCase().includes(q) ||
+      d.country.toLowerCase().includes(q) ||
+      d.tags.some((t) => t.toLowerCase().includes(q));
+    const matchCountries = countries.length === 0 || countries.includes(d.country);
+    const matchTags = tags.length === 0 || tags.every((t) => d.tags.includes(t));
+    const matchPrice = d.price >= priceMin && d.price <= priceMax;
+    const matchRating = d.rating >= ratingMin;
+    return matchQ && matchCountries && matchTags && matchPrice && matchRating;
   });
-  if (!res.ok) throw new Error("Failed to fetch destinations");
-  return res.json() as Promise<{
-    total: number;
-    page: number;
-    pageSize: number;
-    items: Array<{
-      slug: string;
-      name: string;
-      description: string;
-      image: string;
-      rating: number;
-      price: number;
-      country: string;
-      tags: string[];
-    }>;
-  }>;
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sort) {
+      case "price-asc":
+        return a.price - b.price;
+      case "price-desc":
+        return b.price - a.price;
+      case "rating-desc":
+        return b.rating - a.rating;
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
+
+  const total = sorted.length;
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const items = sorted.slice(start, end);
+
+  return {
+    total,
+    page,
+    pageSize,
+    items,
+  };
 }
 
 export default async function DestinationsPage({
