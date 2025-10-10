@@ -75,3 +75,23 @@ Mở http://localhost:3000 để truy cập ứng dụng.
 - Kết nối API/DB để lưu đánh giá và đơn đặt chỗ.
 - Multi-filter nâng cao (khoảng giá trượt, lọc theo nhiều tiêu chí).
 - Tối ưu SEO (structured data nâng cao), sitemap, và analytics.
+
+---
+
+## Đồng bộ nội dung từ cosine.sh lên GitHub
+
+Đã thêm cơ chế tự động fetch HTML từ https://cosine.sh và lưu vào `public/cosine.html`, sau đó commit/push lên GitHub theo lịch.
+
+- Chạy thủ công:
+  ```bash
+  npm run sync:cosine
+  ```
+  File kết quả: [public/cosine.html](file:///public/cosine.html)
+
+- Tự động chạy trên GitHub Actions:
+  - Workflow: `.github/workflows/sync-cosine.yml`
+  - Lịch: mỗi ngày lúc 03:00 UTC (có thể trigger thủ công qua “Run workflow”)
+
+Ghi chú:
+- Script chỉ lưu HTML trang chủ. Asset (ảnh, CSS) vẫn được tải từ nguồn gốc khi mở file.
+- Nếu muốn parse/trích xuất nội dung cụ thể (ví dụ text, headings), báo mình để nâng cấp script.
