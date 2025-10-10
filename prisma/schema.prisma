@@ -20,6 +20,7 @@ model User {
   sessions       Session[]
   reviews        Review[]
   bookings       Booking[]
+  resetTokens    PasswordResetToken[]
 }
 
 model Destination {
@@ -66,6 +67,15 @@ model Booking {
   user        User?    @relation(fields: [userId], references: [id])
   destinationId String?
   destination Destination? @relation(fields: [destinationId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  createdAt DateTime @default(now())
 }
 
 /// NextAuth models
