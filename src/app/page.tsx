@@ -7,6 +7,45 @@ export default function Home() {
 
   return (
     <main className="container">
+      {/* Brand banner */}
+      <section className="mt-6 sm:mt-10">
+        <div className="relative rounded-2xl overflow-hidden">
+          <div
+            className="h-28 sm:h-36 w-full"
+            style={{
+              background:
+                "linear-gradient(90deg, color-mix(in oklab, var(--accent) 45%, transparent), color-mix(in oklab, var(--accent-2) 45%, transparent))",
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-between px-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-black text-white dark:bg-white dark:text-black font-bold">TG</span>
+              <div>
+                <div className="text-sm sm:text-base font-semibold">TravelGo</div>
+                <div className="text-xs/6 text-foreground/70">Khám phá dễ dàng, đặt chỗ nhanh chóng</div>
+              </div>
+            </div>
+            <a href="/destinations" className="btn btn-primary">Khám phá ngay</a>
+          </div>
+        </div>
+
+        {/* Trusted brands */}
+        <div className="mt-3 sm:mt-4 grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {[
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Airbnb_Logo_B%C3%A9lo.svg/2560px-Airbnb_Logo_B%C3%A9lo.svg.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Booking.com_logo.svg/2560px-Booking.com_logo.svg.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Expedia_Logo.svg/2560px-Expedia_Logo.svg.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Tripadvisor_Logo_green.svg/2560px-Tripadvisor_Logo_green.svg.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Skyscanner_logo_2020.svg/2560px-Skyscanner_logo_2020.svg.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kayak_Logo_2016.svg/2560px-Kayak_Logo_2016.svg.png",
+          ].map((src, i) => (
+            <div key={i} className="card p-2 flex items-center justify-center">
+              <img src={src} alt="Brand" className="h-6 sm:h-7 opacity-80" />
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="mt-10 sm:mt-16 grid gap-6 sm:grid-cols-[1.2fr_1fr] items-center">
         <div>
