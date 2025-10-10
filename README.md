@@ -1,97 +1,103 @@
 # TravelGo - Ứng dụng Web Du Lịch
 
-Giao diện web du lịch đầy đủ tính năng, xây dựng bằng Next.js (App Router) + Tailwind CSS v4.
+TravelGo là ứng dụng web du lịch đầy đủ chức năng, xây dựng bằng Next.js (App Router) + Tailwind CSS v4, có backend với Prisma, Auth, Payments, Email, Admin và Rate-limit.
 
-## Tính năng
+## Tính năng giao diện
 
-- Trang chủ có hero, ưu đãi, thanh tìm kiếm, và điểm đến nổi bật.
+- Trang chủ: hero, ưu đãi, thống kê nhanh, thanh tìm kiếm, điểm đến nổi bật.
 - Danh sách điểm đến:
-  - Tìm kiếm theo từ khóa (`q`), ngày đi/về (`from`, `to`).
-  - Bộ lọc nâng cao: nhiều quốc gia (`countries=Việt Nam,Pháp`), nhiều tag (`tags=beach,city`), giá tối thiểu/tối đa (`priceMin`, `priceMax`), rating tối thiểu (`ratingMin`).
-  - Sắp xếp: giá tăng/giảm, rating cao → thấp, tên A → Z (`sort`).
-  - Phân trang phía server: `page`, `pageSize` (mặc định `pageSize=9`), dữ liệu lấy qua API.
+  - Tìm kiếm (`q`), ngày đi/về (`from`, `to`).
+  - Bộ lọc: quốc gia (multi), tags (multi), giá tối thiểu/tối đa, rating tối thiểu.
+  - Sắp xếp: giá tăng/giảm, rating cao → thấp, tên A → Z.
+  - Phân trang phía server: `page`, `pageSize` (mặc định 9).
 - Chi tiết điểm đến:
-  - Ảnh minh họa, thông tin, đặt chỗ nhanh.
-  - Bản đồ nhúng (Google Maps embed, không cần API key).
-  - Đánh giá (hiển thị + thêm mới), lưu trên localStorage (trình duyệt).
-  - SEO động: `generateMetadata` theo từng điểm đến (title/description/OpenGraph) + Structured Data (JSON-LD).
-- Trang Checkout: tổng hợp thông tin và demo thanh toán.
+  - Ảnh, thông tin, đặt chỗ nhanh, bản đồ nhúng (Google Maps embed), đánh giá.
+  - SEO động (generateMetadata) + Structured Data (JSON-LD).
+- Trang Ưu đãi `/deals`: tập hợp điểm đến đang giảm giá (-10%).
+- Trang Giới thiệu `/about`, Liên hệ `/contact`, 404 `/not-found`.
+- NavBar/Footer dùng Heroicons; UI có hiệu ứng, card, button thống nhất.
 
-## API
+## Backend và Quản trị
 
-- Endpoint: `GET /api/destinations`
-- Query params:
-  - `q`, `from`, `to`, `countries` (comma), `tags` (comma), `priceMin`, `priceMax`, `ratingMin`, `sort`, `page`, `pageSize`
-- Response:
-  ```json
-  {
-    "total": 123,
-    "page": 1,
-    "pageSize": 9,
-    "items": [{ "slug": "...", "name": "...", "image": "...", "price": 100, "rating": 4.7, "country": "Việt Nam", "tags": ["beach"] }]
-  }
+- CSDL/ORM: Prisma + SQLite (có thể dùng Postgres).
+- Auth: NextAuth (GitHub OAuth), phân quyền `role=admin`.
+- API chính:
+  - `GET /api/destinations` (lọc/sắp xếp/phân trang từ DB).
+  - `GET/POST /api/reviews` (Prisma + zod).
+  - `GET/POST /api/bookings` (Prisma + zod, gửi email xác nhận nếu cấu hình Resend).
+  - `POST /api/checkout/session` (tạo Stripe Checkout Session).
+  - `POST /api/stripe/webhook` (update trạng thái đơn về `paid`).
+- Admin (chỉ admin):
+  - `/admin` tổng quan.
+  - `/admin/destinations` CRUD điểm đến.
+  - `/admin/reviews` quản lý/xóa đánh giá.
+  - `/admin/bookings` quản lý đơn, cập nhật trạng thái, xóa.
+- Rate limiting:
+  - In-memory token bucket (10 req/phút/IP) cho POST reviews/bookings.
+  - Tùy chọn Upstash Redis (phân tán) nếu cấu hình `UPSTASH_*`.
+- Monitoring (tuỳ chọn): Sentry (`@sentry/nextjs`) nếu cấu hình `SENTRY_DSN`.
+
+## Công nghệ
+
+- Frontend: Next.js App Router, Tailwind v4, Heroicons.
+- Backend: Prisma ORM, NextAuth, Stripe, Resend, (tuỳ chọn) Upstash Redis, Sentry.
+- Dữ liệu mẫu: `src/data/*`, seed script để đưa vào DB.
+
+## Chạy dự án (local)
+
+1) Tạo file `.env` từ `.env.example` và điền:
+   - Bắt buộc: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`, `DATABASE_URL`.
+   - Tuỳ chọn: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SENTRY_DSN`, `SENTRY_ENV`.
+2) Cài deps và migrate:
+   ```bash
+   npm install
+   npx prisma generate
+   npx prisma migrate dev --name init
+   npm run db:seed
+   ```
+3) Chạy dev:
+   ```bash
+   npm run dev
+   ```
+4) Đăng nhập GitHub tại `/api/auth/signin`, mở Prisma Studio (`npx prisma studio`) để set role=admin cho tài khoản.
+5) Truy cập:
+   - Trang chủ: `/`
+   - Điểm đến: `/destinations`
+   - Ưu đãi: `/deals`
+   - Checkout: `/checkout`
+   - Admin: `/admin`, `/admin/destinations`, `/admin/reviews`, `/admin/bookings`
+
+## Stripe webhook (dev)
+
+- Nếu cấu hình Stripe, chạy listener:
+  ```bash
+  stripe listen --forward-to localhost:3000/api/stripe/webhook
   ```
 
-Ghi chú: Trang `/destinations` fetch từ API. Có thể cấu hình biến môi trường `NEXT_PUBLIC_BASE_URL` để chỉ định domain (mặc định dùng `http://localhost:3000` khi dev, hoặc `https://${VERCEL_URL}` trên Vercel).
+## Scripts hữu ích
 
-## Chạy dự án
-
-```bash
-npm install
-npm run dev
-```
-
-Mở http://localhost:3000 để truy cập ứng dụng.
-
-## Các đường dẫn quan trọng
-
-- Trang chủ: `/`
-- Danh sách điểm đến: `/destinations`
-  - Ví dụ lọc: `/destinations?q=bien&countries=Việt Nam,Pháp&priceMin=50&priceMax=100&ratingMin=4.5&tags=beach,city`
-  - Ví dụ sắp xếp: `/destinations?sort=price-asc`
-  - Ví dụ phân trang: `/destinations?page=2&pageSize=9`
-- Chi tiết điểm đến: `/destinations/ha-noi`, `/destinations/da-nang`, `/destinations/paris`, `/destinations/bali`, `/destinations/tokyo`
-- Checkout: `/checkout` (hoặc đi từ form đặt chỗ nhanh trên trang chi tiết)
+- Seed dữ liệu: `npm run db:seed`
+- Sync nội dung cosine.sh:
+  - `npm run sync:cosine` → lưu HTML vào `public/cosine.html`
+  - GitHub Actions lịch hằng ngày: `.github/workflows/sync-cosine.yml`
 
 ## Cấu trúc thư mục nổi bật
 
 - `src/app/layout.tsx`: Layout chung (NavBar, Footer, metadata).
 - `src/app/page.tsx`: Trang chủ.
-- `src/app/destinations/page.tsx`: Danh sách + bộ lọc + sắp xếp + phân trang (server).
-- `src/app/destinations/[slug]/page.tsx`: Chi tiết điểm đến (Map, Reviews, Booking nhanh, SEO động + JSON-LD).
-- `src/app/api/destinations/route.ts`: API danh sách điểm đến (lọc/sắp xếp/phân trang).
-- `src/app/checkout/page.tsx`: Trang checkout.
-- `src/components/*`: Các component UI (NavBar, Footer, SearchBar, FiltersBar, SortBar, PaginationBar, DestinationCard, MapEmbed, ReviewsSection).
-- `src/data/*`: Dữ liệu mẫu (destinations, reviews).
+- `src/app/destinations/page.tsx`: Danh sách + lọc + sắp xếp + phân trang.
+- `src/app/destinations/[slug]/page.tsx`: Chi tiết (Map, Reviews, Booking nhanh, SEO + JSON-LD).
+- `src/app/deals/page.tsx`: Ưu đãi.
+- `src/app/checkout/page.tsx`: Checkout (lưu booking + Stripe).
+- `src/app/admin/*`: Trang admin (destinations/reviews/bookings).
+- `src/app/api/*`: API (destinations, reviews, bookings, checkout session, stripe webhook, admin).
+- `src/components/*`: NavBar, Footer, SearchBar, FiltersBar, SortBar, PaginationBar, DestinationCard, MapEmbed, ReviewsSection, Admin managers.
+- `src/lib/*`: prisma client, validation (zod), rateLimit (local + Upstash).
+- `prisma/schema.prisma`: Schema DB (User/Destination/Review/Booking + NextAuth models).
+- `scripts/seed.mjs`: Seed dữ liệu mẫu vào DB.
 
 ## Lưu ý
 
-- Ảnh sử dụng nguồn Unsplash (link trực tiếp). Trong sản xuất nên dùng CDN/bucket riêng.
-- Bản đồ dùng Google Maps embed bằng query, phù hợp demo. Sản xuất nên dùng Google Maps Platform/Mapbox để có marker, đường đi, v.v.
-- Reviews lưu trên `localStorage` theo từng điểm đến (không có backend).
-
-## Mở rộng
-
-- Kết nối API/DB để lưu đánh giá và đơn đặt chỗ.
-- Multi-filter nâng cao (khoảng giá trượt, lọc theo nhiều tiêu chí).
-- Tối ưu SEO (structured data nâng cao), sitemap, và analytics.
-
----
-
-## Đồng bộ nội dung từ cosine.sh lên GitHub
-
-Đã thêm cơ chế tự động fetch HTML từ https://cosine.sh và lưu vào `public/cosine.html`, sau đó commit/push lên GitHub theo lịch.
-
-- Chạy thủ công:
-  ```bash
-  npm run sync:cosine
-  ```
-  File kết quả: [public/cosine.html](file:///public/cosine.html)
-
-- Tự động chạy trên GitHub Actions:
-  - Workflow: `.github/workflows/sync-cosine.yml`
-  - Lịch: mỗi ngày lúc 03:00 UTC (có thể trigger thủ công qua “Run workflow”)
-
-Ghi chú:
-- Script chỉ lưu HTML trang chủ. Asset (ảnh, CSS) vẫn được tải từ nguồn gốc khi mở file.
-- Nếu muốn parse/trích xuất nội dung cụ thể (ví dụ text, headings), báo mình để nâng cấp script.
+- Ảnh dùng link Unsplash. Sản xuất nên dùng CDN/bucket riêng.
+- Bản đồ dùng Google Maps embed không cần key (demo). Sản xuất nên dùng Google Maps Platform/Mapbox.
+- Khi deploy sản xuất, khuyến nghị dùng Postgres (Neon/Supabase/Railway), Upstash Redis và Sentry để đảm bảo độ bền, rate-limit và giám sát.
