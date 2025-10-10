@@ -15,7 +15,7 @@ export default function NavBar() {
 
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/destinations" className="hover:underline hover:underline-offset-4">Điểm đến</Link>
-          <Link href="/#deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link>
+          <Link href="/deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link>
           <Link href="/#stories" className="hover:underline hover:underline-offset-4">Câu chuyện</Link>
           <Link href="/about" className="hover:underline hover:underline-offset-4">Giới thiệu</Link>
           <Link href="/contact" className="hover:underline hover:underline-offset-4">Liên hệ</Link>
@@ -35,7 +35,7 @@ export default function NavBar() {
         <div className="md:hidden border-t border-black/[.08] dark:border-white/[.145]">
           <div className="px-4 py-3 flex flex-col gap-2">
             <Link href="/destinations" onClick={() => setOpen(false)} className="py-1">Điểm đến</Link>
-            <Link href="/#deals" onClick={() => setOpen(false)} className="py-1">Ưu đãi</Link>
+            <Link href="/deals" onClick={() => setOpen(false)} className="py-1">Ưu đãi</Link>
             <Link href="/#stories" onClick={() => setOpen(false)} className="py-1">Câu chuyện</Link>
             <Link href="/about" onClick={() => setOpen(false)} className="py-1">Giới thiệu</Link>
             <Link href="/contact" onClick={() => setOpen(false)} className="py-1">Liên hệ</Link>

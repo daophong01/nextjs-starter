@@ -19,7 +19,7 @@ export default function Footer() {
           <ul className="text-sm/6 space-y-1">
             <li><Link href="/destinations" className="hover:underline hover:underline-offset-4">Điểm đến</Link></li>
             <li><Link href="/checkout" className="hover:underline hover:underline-offset-4">Đặt chỗ</Link></li>
-            <li><Link href="/#deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link></li>
+            <li><Link href="/deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link></li>
             <li><Link href="/#stories" className="hover:underline hover:underline-offset-4">Câu chuyện</Link></li>
             <li><Link href="/about" className="hover:underline hover:underline-offset-4">Giới thiệu</Link></li>
             <li><Link href="/contact" className="hover:underline hover:underline-offset-4">Liên hệ</Link></li>
