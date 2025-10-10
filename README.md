@@ -48,19 +48,24 @@ TravelGo là ứng dụng web du lịch đầy đủ chức năng, xây dựng b
 1) Tạo file `.env` từ `.env.example` và điền:
    - Bắt buộc: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`, `DATABASE_URL`.
    - Tuỳ chọn: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SENTRY_DSN`, `SENTRY_ENV`.
-2) Cài deps và migrate:
+2) Khởi chạy Postgres thật (tên DB tùy ý đã cấu hình sẵn: `travelgo`)
+   ```bash
+   npm run db:up
+   ```
+   - Thay đổi tên DB/username/password nếu muốn trong `docker-compose.yml`.
+3) Cài deps và migrate:
    ```bash
    npm install
    npx prisma generate
    npx prisma migrate dev --name init
    npm run db:seed
    ```
-3) Chạy dev:
+4) Chạy dev:
    ```bash
    npm run dev
    ```
-4) Đăng nhập GitHub tại `/api/auth/signin`, mở Prisma Studio (`npx prisma studio`) để set role=admin cho tài khoản.
-5) Truy cập:
+5) Đăng nhập GitHub tại `/api/auth/signin`, mở Prisma Studio (`npx prisma studio`) để set role=admin cho tài khoản.
+6) Truy cập:
    - Trang chủ: `/`
    - Điểm đến: `/destinations`
    - Ưu đãi: `/deals`
