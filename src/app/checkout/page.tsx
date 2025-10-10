@@ -50,12 +50,23 @@ export default function CheckoutPage({
     }
   };
 
+  const payStripe = async () => {
+    if (!result?.id) return;
+    const res = await fetch("/api/checkout/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: result.id }),
+    });
+    const data = await res.json();
+    if (data?.url) window.location.href = data.url;
+  };
+
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6">
+    <main className="container">
       <h1 className="text-2xl sm:text-3xl font-bold mt-8">Xác nhận đặt chỗ</h1>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-[1.2fr_1fr]">
-        <section className="rounded-2xl border border-black/[.08] dark:border-white/[.145] p-4">
+        <section className="card p-4">
           <h2 className="font-semibold mb-2">Thông tin hành trình</h2>
           {d ? (
             <div className="text-sm/6">
@@ -97,27 +108,34 @@ export default function CheckoutPage({
           </div>
         </section>
 
-        <aside className="rounded-2xl border border-black/[.08] dark:border-white/[.145] p-4 h-max">
+        <aside className="card p-4 h-max">
           <h2 className="font-semibold mb-2">Thanh toán</h2>
           <div className="text-sm/6">
             <p>Giá cơ bản: ${d?.price ?? 0} x {guests} khách</p>
             <p>Phí dịch vụ: $15</p>
             <p className="font-semibold mt-2">Tổng: ${price + 15}</p>
           </div>
-          <button
-            className="mt-4 rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90 disabled:opacity-70"
-            onClick={submit}
-            disabled={submitting || !name || !email}
-          >
-            {submitting ? "Đang xử lý..." : "Hoàn tất"}
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button
+              className="btn btn-primary disabled:opacity-70"
+              onClick={submit}
+              disabled={submitting || !name || !email}
+            >
+              {submitting ? "Đang xử lý..." : "Lưu đặt chỗ"}
+            </button>
+            {result && (
+              <button className="btn" onClick={payStripe}>
+                Thanh toán Stripe
+              </button>
+            )}
+          </div>
           {error && <p className="text-xs/6 text-red-600 mt-2">{error}</p>}
           {result && (
             <p className="text-xs/6 text-green-700 mt-2">
-              Đặt chỗ thành công! Mã đơn: <span className="font-mono">{result.id}</span>
+              Đặt chỗ đã lưu! Mã đơn: <span className="font-mono">{result.id}</span>
             </p>
           )}
-          <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán demo; dữ liệu được lưu vào backend JSON.</p>
+          <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán thực hiện qua Stripe (nếu cấu hình).</p>
         </aside>
       </div>
     </main>
