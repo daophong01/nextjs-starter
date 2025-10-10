@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ReviewCreateSchema } from "@/lib/validation";
+import { rateLimitOrThrow, keyFromRequest } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,6 +23,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try {
+    rateLimitOrThrow(keyFromRequest(request));
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: err.status || 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = ReviewCreateSchema.safeParse(body);
   if (!parsed.success) {

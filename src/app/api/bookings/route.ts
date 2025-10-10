@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BookingCreateSchema } from "@/lib/validation";
-import Stripe from "stripe";
 import { Resend } from "resend";
+import { rateLimitOrThrow, keyFromRequest } from "@/lib/rateLimit";
 
 /**
  * GET all bookings (for admin)
@@ -15,9 +15,15 @@ export async function GET() {
 }
 
 /**
- * Create booking; optionally send email and prepare Stripe Checkout session
+ * Create booking; optionally send email
  */
 export async function POST(request: Request) {
+  try {
+    rateLimitOrThrow(keyFromRequest(request));
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: err.status || 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = BookingCreateSchema.safeParse(body);
   if (!parsed.success) {
