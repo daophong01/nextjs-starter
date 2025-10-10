@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ReviewCreateSchema } from "@/lib/validation";
 import { rateLimitOrThrow, keyFromRequest } from "@/lib/rateLimit";
+import { assertNotRateLimited, keyFromRequest as keyUpstash } from "@/lib/rateLimitUpstash";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -23,10 +24,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  // Prefer Upstash limiter if configured, else local limiter
   try {
-    rateLimitOrThrow(keyFromRequest(request));
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: err.status || 429 });
+    await assertNotRateLimited(keyUpstash(request));
+  } catch {
+    try {
+      rateLimitOrThrow(keyFromRequest(request));
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: err.status || 429 });
+    }
   }
 
   const body = await request.json().catch(() => null);
