@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DestinationsQuerySchema } from "@/lib/validation";
+import { DESTINATIONS } from "@/data/destinations";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,8 +25,25 @@ export async function GET(request: Request) {
   const page = Math.max(1, Number(parsed.data.page || 1));
   const pageSize = Math.max(1, Number(parsed.data.pageSize || 9));
 
-  // Fetch all then filter in memory for simplicity; could translate to SQL with Prisma where/orderBy.
-  const all = await prisma.destination.findMany();
+  // Try DB, fallback to static data on error (e.g., missing migrations)
+  let all: Array<{
+    slug: string; name: string; description: string; image: string; rating: number; price: number; country: string; tags: string;
+  }>;
+  try {
+    all = await prisma.destination.findMany();
+  } catch {
+    all = DESTINATIONS.map((d) => ({
+      slug: d.slug,
+      name: d.name,
+      description: d.description,
+      image: d.image,
+      rating: d.rating,
+      price: Math.round(d.price),
+      country: d.country,
+      tags: d.tags.join(","),
+    }));
+  }
+
   const filtered = all.filter((d) => {
     const dTags = d.tags.split(",").map((t) => t.trim()).filter(Boolean);
     const matchQ =
