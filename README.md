@@ -48,11 +48,10 @@ TravelGo là ứng dụng web du lịch đầy đủ chức năng, xây dựng b
 1) Tạo file `.env` từ `.env.example` và điền:
    - Bắt buộc: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`, `DATABASE_URL`.
    - Tuỳ chọn: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SENTRY_DSN`, `SENTRY_ENV`.
-2) Khởi chạy Postgres thật (tên DB tùy ý đã cấu hình sẵn: `travelgo`)
-   ```bash
-   npm run db:up
-   ```
-   - Thay đổi tên DB/username/password nếu muốn trong `docker-compose.yml`.
+2) Chuẩn bị Postgres (không dùng Docker):
+   - Cài Postgres trên máy hoặc dùng dịch vụ cloud (Neon/Supabase/Railway).
+   - Tạo database (ví dụ: `travelgo`) và user có quyền.
+   - Cập nhật `DATABASE_URL` trong `.env` cho khớp kết nối.
 3) Cài deps và migrate:
    ```bash
    npm install

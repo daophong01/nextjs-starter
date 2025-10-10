@@ -10,9 +10,7 @@
     "sync:cosine": "node scripts/sync-cosine.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
-    "db:seed": "node scripts/seed.mjs",
-    "db:up": "docker compose up -d",
-    "db:down": "docker compose down"
+    "db:seed": "node scripts/seed.mjs"
   },
   "dependencies": {
     "react": "19.1.0",
