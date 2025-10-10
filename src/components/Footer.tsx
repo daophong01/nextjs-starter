@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="w-full border-t border-black/[.08] dark:border-white/[.145] mt-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 grid gap-6 sm:grid-cols-3">
+      <div className="container py-8 grid gap-6 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 font-bold text-lg mb-2">
             <span className="inline-block rounded bg-black text-white dark:bg-white dark:text-black px-2 py-1 text-sm">TG</span>
@@ -21,6 +21,8 @@ export default function Footer() {
             <li><Link href="/checkout" className="hover:underline hover:underline-offset-4">Đặt chỗ</Link></li>
             <li><Link href="/#deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link></li>
             <li><Link href="/#stories" className="hover:underline hover:underline-offset-4">Câu chuyện</Link></li>
+            <li><Link href="/about" className="hover:underline hover:underline-offset-4">Giới thiệu</Link></li>
+            <li><Link href="/contact" className="hover:underline hover:underline-offset-4">Liên hệ</Link></li>
           </ul>
         </div>
 
@@ -33,7 +35,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 text-xs/6 text-center text-foreground/60">
+      <div className="container py-4 text-xs/6 text-center text-foreground/60">
         © {new Date().getFullYear()} TravelGo. All rights reserved.
       </div>
     </footer>

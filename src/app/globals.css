@@ -3,11 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: #2563eb; /* indigo-600 */
+  --accent-2: #14b8a6; /* teal-500 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,11 +20,42 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --accent: #60a5fa; /* indigo-400 */
+    --accent-2: #2dd4bf; /* teal-400 */
   }
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 800px at 10% -20%, color-mix(in oklab, var(--accent) 8%, transparent) 0%, transparent 60%),
+    radial-gradient(1000px 600px at 90% -20%, color-mix(in oklab, var(--accent-2) 6%, transparent) 0%, transparent 60%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+a {
+  color: color-mix(in oklab, var(--foreground) 85%, var(--accent) 15%);
+}
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  max-width: 72rem; /* ~1152px */
+}
+
+.card {
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  background: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
+}
+.dark .card {
+  border-color: color-mix(in oklab, var(--foreground) 14.5%, transparent);
+  background: color-mix(in oklab, var(--background) 60%, var(--foreground) 40%);
 }
