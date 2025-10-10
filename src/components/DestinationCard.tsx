@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Destination } from "../data/destinations";
+import { StarIcon, MapPinIcon } from "@heroicons/react/24/solid";
 
 export default function DestinationCard({ d }: { d: Destination }) {
   const isDeal = d.tags.includes("beach") || d.tags.includes("city");
@@ -24,8 +25,14 @@ export default function DestinationCard({ d }: { d: Destination }) {
       </div>
       <div className="p-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{d.name}</h3>
-          <span className="text-sm/6 rounded-full px-2 py-1 border border-black/[.08] dark:border-white/[.145]">⭐ {d.rating}</span>
+          <h3 className="font-semibold flex items-center gap-2">
+            <MapPinIcon className="h-4 w-4 text-foreground/70" aria-hidden="true" />
+            {d.name}
+          </h3>
+          <span className="text-sm/6 rounded-full px-2 py-1 border border-black/[.08] dark:border-white/[.145] flex items-center gap-1">
+            <StarIcon className="h-4 w-4 text-yellow-500" aria-hidden="true" />
+            {d.rating}
+          </span>
         </div>
         <p className="text-sm/6 text-foreground/70 line-clamp-2 mt-1">{d.description}</p>
         <div className="mt-3 flex items-center justify-between">

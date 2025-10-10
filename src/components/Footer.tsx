@@ -1,6 +1,14 @@
 import Link from "next/link";
+import { MapPinIcon, TagIcon, ChatBubbleLeftRightIcon, InformationCircleIcon, EnvelopeIcon, CreditCardIcon } from "@heroicons/react/24/outline";
 
 export default function Footer() {
+  const item = (href: string, label: string, Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>) => (
+    <Link href={href} className="hover:underline hover:underline-offset-4 flex items-center gap-1.5">
+      {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+      {label}
+    </Link>
+  );
+
   return (
     <footer className="w-full border-t border-black/[.08] dark:border-white/[.145] mt-16">
       <div className="container py-8 grid gap-6 sm:grid-cols-3">
@@ -17,12 +25,12 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold mb-2">Điều hướng</h3>
           <ul className="text-sm/6 space-y-1">
-            <li><Link href="/destinations" className="hover:underline hover:underline-offset-4">Điểm đến</Link></li>
-            <li><Link href="/checkout" className="hover:underline hover:underline-offset-4">Đặt chỗ</Link></li>
-            <li><Link href="/deals" className="hover:underline hover:underline-offset-4">Ưu đãi</Link></li>
-            <li><Link href="/#stories" className="hover:underline hover:underline-offset-4">Câu chuyện</Link></li>
-            <li><Link href="/about" className="hover:underline hover:underline-offset-4">Giới thiệu</Link></li>
-            <li><Link href="/contact" className="hover:underline hover:underline-offset-4">Liên hệ</Link></li>
+            <li>{item("/destinations", "Điểm đến", MapPinIcon)}</li>
+            <li>{item("/checkout", "Đặt chỗ", CreditCardIcon)}</li>
+            <li>{item("/deals", "Ưu đãi", TagIcon)}</li>
+            <li>{item("/#stories", "Câu chuyện", ChatBubbleLeftRightIcon)}</li>
+            <li>{item("/about", "Giới thiệu", InformationCircleIcon)}</li>
+            <li>{item("/contact", "Liên hệ", EnvelopeIcon)}</li>
           </ul>
         </div>
 
