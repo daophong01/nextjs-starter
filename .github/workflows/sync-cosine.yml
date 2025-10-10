@@ -1,0 +1,40 @@
+name: Sync cosine.sh HTML
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *" # daily at 03:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install (no dependencies needed)
+        run: npm ci --ignore-scripts || npm i --no-audit --no-fund
+
+      - name: Run sync script
+        run: npm run sync:cosine
+
+      - name: Commit and push if changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: sync cosine.sh to public/cosine.html"
+            git push
+          else
+            echo "No changes to commit."
+          fi
