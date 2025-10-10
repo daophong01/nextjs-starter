@@ -1,30 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DestinationsQuerySchema } from "@/lib/validation";
-import { DESTINATIONS } from "../../../data/destinations";
-
-/**
- * Seed destinations into DB on first read if table empty.
- */
-async function ensureSeeded() {
-  const count = await prisma.destination.count();
-  if (count === 0) {
-    for (const d of DESTINATIONS) {
-      await prisma.destination.create({
-        data: {
-          slug: d.slug,
-          name: d.name,
-          description: d.description,
-          image: d.image,
-          rating: d.rating,
-          price: Math.round(d.price),
-          country: d.country,
-          tags: d.tags.join(","),
-        },
-      });
-    }
-  }
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -47,8 +23,6 @@ export async function GET(request: Request) {
   const sort = parsed.data.sort || "";
   const page = Math.max(1, Number(parsed.data.page || 1));
   const pageSize = Math.max(1, Number(parsed.data.pageSize || 9));
-
-  await ensureSeeded();
 
   // Fetch all then filter in memory for simplicity; could translate to SQL with Prisma where/orderBy.
   const all = await prisma.destination.findMany();
