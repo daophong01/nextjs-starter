@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import Link from "next/link";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,10 @@ export default async function AdminPage() {
     <main className="container">
       <h1 className="text-2xl sm:text-3xl font-bold mt-8">Bảng điều khiển (Admin)</h1>
       <p className="text-sm/6 text-foreground/70">Xem nhanh đơn đặt chỗ và đánh giá gần đây.</p>
+
+      <div className="mt-4 flex gap-3">
+        <Link href="/admin/destinations" className="btn btn-primary">Quản lý điểm đến</Link>
+      </div>
 
       <section className="mt-6">
         <h2 className="font-semibold mb-2">Đơn đặt chỗ</h2>
