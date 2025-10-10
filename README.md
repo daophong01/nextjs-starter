@@ -67,11 +67,38 @@ TravelGo là ứng dụng web du lịch đầy đủ chức năng, xây dựng b
    - Checkout: `/checkout`
    - Admin: `/admin`, `/admin/destinations`, `/admin/reviews`, `/admin/bookings`
 
-## Stripe webhook (dev)
+## Lệnh chạy nhanh
 
-- Nếu cấu hình Stripe, chạy listener:
+- Dev:
+  ```bash
+  npm run dev
+  ```
+- Build + chạy production:
+  ```bash
+  npm run build
+  npm run start
+  ```
+- Lint:
+  ```bash
+  npm run lint
+  ```
+- Prisma:
+  ```bash
+  npx prisma generate
+  npx prisma migrate dev --name init
+  npx prisma studio
+  ```
+- Seed dữ liệu:
+  ```bash
+  npm run db:seed
+  ```
+- Stripe webhook (dev):
   ```bash
   stripe listen --forward-to localhost:3000/api/stripe/webhook
+  ```
+- Đồng bộ cosine.sh:
+  ```bash
+  npm run sync:cosine
   ```
 
 ## Scripts hữu ích
