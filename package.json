@@ -25,7 +25,8 @@
     "@heroicons/react": "^2.1.5",
     "@upstash/ratelimit": "^1.0.6",
     "@upstash/redis": "^1.33.0",
-    "@sentry/nextjs": "^8.33.1"
+    "@sentry/nextjs": "^8.33.1",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "typescript": "^5",

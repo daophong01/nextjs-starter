@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { MapPinIcon, TagIcon, ChatBubbleLeftRightIcon, InformationCircleIcon, EnvelopeIcon, CreditCardIcon } from "@heroicons/react/24/outline";
+import { useSession, signOut } from "next-auth/react";
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
 
   const item = (href: string, label: string, Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>) => (
     <Link href={href} className="hover:underline hover:underline-offset-4 flex items-center gap-1.5">
@@ -12,6 +14,24 @@ export default function NavBar() {
       {label}
     </Link>
   );
+
+  const authArea = () => {
+    if (session?.user?.email) {
+      const initial = (session.user.name || session.user.email || "U").slice(0, 1).toUpperCase();
+      return (
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-black/[.08] dark:border-white/[.145]">{initial}</span>
+          <button className="btn" onClick={() => signOut({ callbackUrl: "/" })}>Đăng xuất</button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-3">
+        <Link href="/signin" className="btn">Đăng nhập</Link>
+        <Link href="/signup" className="btn">Đăng ký</Link>
+      </div>
+    );
+  };
 
   return (
     <header className="w-full border-b border-black/[.08] dark:border-white/[.145] bg-background text-foreground">
@@ -31,6 +51,7 @@ export default function NavBar() {
             <CreditCardIcon className="h-4 w-4 mr-1.5" aria-hidden="true" />
             Đặt chỗ
           </Link>
+          {authArea()}
         </nav>
 
         <button
@@ -54,6 +75,7 @@ export default function NavBar() {
               <CreditCardIcon className="h-4 w-4 mr-1.5" aria-hidden="true" />
               Đặt chỗ
             </Link>
+            <div className="mt-2">{authArea()}</div>
           </div>
         </div>
       )}
