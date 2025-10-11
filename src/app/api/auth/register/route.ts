@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { render } from "@react-email/render";
+import VerifyEmail from "@/emails/VerifyEmail";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -41,18 +43,12 @@ export async function POST(request: Request) {
   if (process.env.RESEND_API_KEY) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
+      const emailHtml = render(VerifyEmail({ name, verifyLink }));
       await resend.emails.send({
         from: "TravelGo <noreply@travelgo.example>",
         to: email,
         subject: "Xác thực email",
-        html: `
-          <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
-            <p>Xin chào${name ? " " + name : ""},</p>
-            <p>Nhấn vào liên kết sau để xác thực email của bạn:</p>
-            <p><a href="${verifyLink}">${verifyLink}</a></p>
-            <p>Liên kết có hiệu lực trong 24 giờ.</p>
-          </div>
-        `,
+        html: emailHtml,
       });
     } catch {
       // ignore email errors

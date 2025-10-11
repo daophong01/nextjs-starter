@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { render } from "@react-email/render";
+import ResetPasswordEmail from "@/emails/ResetPasswordEmail";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -24,18 +26,12 @@ export async function POST(request: Request) {
   if (process.env.RESEND_API_KEY) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
+      const emailHtml = render(ResetPasswordEmail({ resetLink }));
       await resend.emails.send({
         from: "TravelGo <noreply@travelgo.example>",
         to: email,
         subject: "Đặt lại mật khẩu",
-        html: `
-          <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
-            <p>Xin chào${user.name ? " " + user.name : ""},</p>
-            <p>Nhấn vào liên kết sau để đặt lại mật khẩu (hiệu lực 1 giờ):</p>
-            <p><a href="${resetLink}">${resetLink}</a></p>
-            <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
-          </div>
-        `,
+        html: emailHtml,
       });
     } catch {
       // ignore email errors

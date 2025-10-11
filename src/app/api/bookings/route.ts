@@ -4,6 +4,8 @@ import { BookingCreateSchema } from "@/lib/validation";
 import { Resend } from "resend";
 import { rateLimitOrThrow, keyFromRequest } from "@/lib/rateLimit";
 import { assertNotRateLimited, keyFromRequest as keyUpstash } from "@/lib/rateLimitUpstash";
+import { render } from "@react-email/render";
+import BookingConfirmationEmail from "@/emails/BookingConfirmation";
 
 /**
  * GET all bookings (for admin)
@@ -56,28 +58,23 @@ export async function POST(request: Request) {
   if (process.env.RESEND_API_KEY) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const html = `
-        <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #171717;">
-          <h2 style="margin:0 0 8px 0;">Xác nhận đặt chỗ</h2>
-          <p style="margin:0 0 12px 0;">Chào ${booking.name},</p>
-          <p style="margin:0 0 8px 0;">
-            Bạn đã đặt chỗ thành công. Mã đơn: <b>${booking.id}</b>.
-          </p>
-          <table style="margin-top:8px; border-collapse: collapse;">
-            <tr><td style="padding:4px 8px;">Điểm đến</td><td style="padding:4px 8px;"><b>${booking.destination || "N/A"}</b></td></tr>
-            <tr><td style="padding:4px 8px;">Khách</td><td style="padding:4px 8px;"><b>${booking.guests}</b></td></tr>
-            <tr><td style="padding:4px 8px;">Thời gian</td><td style="padding:4px 8px;">${booking.from || "-"} → ${booking.to || "-"}</td></tr>
-            <tr><td style="padding:4px 8px;">Tổng</td><td style="padding:4px 8px;"><b>${booking.price}</b></td></tr>
-            <tr><td style="padding:4px 8px;">Trạng thái</td><td style="padding:4px 8px;">${booking.status}</td></tr>
-          </table>
-          <p style="margin-top:12px;">Cảm ơn bạn đã tin tưởng TravelGo!</p>
-        </div>
-      `;
+      const emailHtml = render(
+        BookingConfirmationEmail({
+          name: booking.name,
+          id: booking.id,
+          destination: booking.destination || undefined,
+          guests: booking.guests,
+          from: booking.from || undefined,
+          to: booking.to || undefined,
+          price: booking.price,
+          status: booking.status,
+        })
+      );
       await resend.emails.send({
         from: "TravelGo <noreply@travelgo.example>",
         to: booking.email,
         subject: "Xác nhận đặt chỗ",
-        html,
+        html: emailHtml,
       });
     } catch {
       // ignore email errors
