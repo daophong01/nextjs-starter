@@ -32,7 +32,8 @@
     "bcryptjs": "^2.4.3",
     "@react-email/components": "^0.0.23",
     "@react-email/render": "^0.0.17",
-    "@vercel/analytics": "^1.2.2"
+    "@vercel/analytics": "^1.2.2",
+    "@babel/runtime": "^7.25.0"
   },
   "devDependencies": {
     "typescript": "^5",
