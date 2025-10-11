@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const emailHtml = render(VerifyEmail({ name, verifyLink }));
       await resend.emails.send({
-        from: "TravelGo <noreply@travelgo.example>",
+        from: process.env.RESEND_FROM || "TravelGo <noreply@travelgo.example>",
         to: email,
         subject: "Xác thực email",
         html: emailHtml,

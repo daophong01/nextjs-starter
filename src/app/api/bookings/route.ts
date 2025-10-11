@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         })
       );
       await resend.emails.send({
-        from: "TravelGo <noreply@travelgo.example>",
+        from: process.env.RESEND_FROM || "TravelGo <noreply@travelgo.example>",
         to: booking.email,
         subject: "Xác nhận đặt chỗ",
         html: emailHtml,

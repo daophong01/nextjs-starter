@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const emailHtml = render(ResetPasswordEmail({ resetLink }));
       await resend.emails.send({
-        from: "TravelGo <noreply@travelgo.example>",
+        from: process.env.RESEND_FROM || "TravelGo <noreply@travelgo.example>",
         to: email,
         subject: "Đặt lại mật khẩu",
         html: emailHtml,

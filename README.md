@@ -127,6 +127,46 @@ TravelGo là ứng dụng web du lịch đầy đủ chức năng, xây dựng b
 - `prisma/schema.prisma`: Schema DB (User/Destination/Review/Booking + NextAuth models).
 - `scripts/seed.mjs`: Seed dữ liệu mẫu vào DB.
 
+## Email domain thật (Resend) và DNS
+
+Để email không vào spam, cần xác thực domain gửi email và cài đặt đúng SPF/DKIM/DMARC.
+
+1) Xác thực domain trên Resend
+- Tạo tài khoản tại https://resend.com → Domains → Add domain (ví dụ: travelgo.yourdomain.com hoặc yourdomain.com).
+- Resend cung cấp bản ghi DNS (TXT/CNAME) cho DKIM. Hãy thêm các bản ghi này vào DNS của domain bạn (Cloudflare/Route53/Namecheap...).
+- Sau khi DNS propagated, domain sẽ ở trạng thái Verified.
+
+2) Thiết lập SPF
+- Thêm/ghi đè bản ghi TXT cho SPF (nếu chưa có):
+  - Name/Host: @
+  - Value: v=spf1 include:resend.com ~all
+- Nếu đã có SPF, hãy thêm include:resend.com vào giá trị hiện tại.
+
+3) Thiết lập DKIM (từ Resend)
+- Thêm các CNAME/TXT theo hướng dẫn trên trang Domain của Resend (mỗi domain có keys riêng).
+- Chờ xác thực thành công.
+
+4) Thiết lập DMARC
+- Bản ghi TXT:
+  - Name: _dmarc
+  - Value ví dụ: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com; ruf=mailto:dmarc@yourdomain.com; pct=100
+- Bạn có thể dùng p=reject để nghiêm ngặt hơn sau khi kiểm tra hoạt động ổn định.
+
+5) Cấu hình ứng dụng
+- Điền `RESEND_API_KEY` và `RESEND_FROM` trong `.env`:
+  ```env
+  RESEND_API_KEY="re_..."
+  RESEND_FROM="TravelGo <noreply@yourdomain.com>"
+  ```
+- Ứng dụng đã dùng `RESEND_FROM` cho tất cả email trong API:
+  - Đăng ký: gửi email xác thực
+  - Quên mật khẩu: gửi liên kết đặt lại
+  - Đặt chỗ: gửi xác nhận đơn
+
+6) Kiểm tra
+- Dùng https://www.mail-tester.com/ để gửi thử và kiểm tra điểm spam.
+- Kiểm tra mục Domain trên Resend có trạng thái “Verified”.
+
 ## Lưu ý
 
 - Ảnh dùng link Unsplash. Sản xuất nên dùng CDN/bucket riêng.
