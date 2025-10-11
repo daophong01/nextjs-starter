@@ -24,6 +24,8 @@ export const authOptions: NextAuthOptions = {
         if (!email || !password) return null;
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user || !user.passwordHash) return null;
+        // Yêu cầu xác thực email trước khi đăng nhập bằng credentials
+        if (!user.emailVerified) return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
         return { id: user.id, email: user.email, name: user.name || undefined } as any;

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Resend } from "resend";
+import crypto from "crypto";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -21,5 +23,41 @@ export async function POST(request: Request) {
   const user = await prisma.user.create({
     data: { email, name: name || null, passwordHash, role: "user" },
   });
-  return NextResponse.json({ id: user.id, email: user.email });
+
+  // Create verification token (using NextAuth VerificationToken model)
+  const token = crypto.randomUUID();
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+  await prisma.verificationToken.create({
+    data: {
+      identifier: email,
+      token,
+      expires,
+    },
+  });
+
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const verifyLink = `${baseUrl}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: "TravelGo <noreply@travelgo.example>",
+        to: email,
+        subject: "Xác thực email",
+        html: `
+          <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial;">
+            <p>Xin chào${name ? " " + name : ""},</p>
+            <p>Nhấn vào liên kết sau để xác thực email của bạn:</p>
+            <p><a href="${verifyLink}">${verifyLink}</a></p>
+            <p>Liên kết có hiệu lực trong 24 giờ.</p>
+          </div>
+        `,
+      });
+    } catch {
+      // ignore email errors
+    }
+  }
+
+  return NextResponse.json({ id: user.id, email: user.email, verifySent: Boolean(process.env.RESEND_API_KEY) });
 }
