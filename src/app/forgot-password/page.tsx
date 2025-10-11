@@ -1,11 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+declare global {
+  interface Window {
+    turnstile?: any;
+  }
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+    if (!siteKey) return;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    document.body.appendChild(script);
+    const render = () => {
+      if (!window.turnstile) return;
+      window.turnstile.render("#captcha", {
+        sitekey: siteKey,
+        callback: (token: string) => setCaptchaToken(token),
+      });
+    };
+    script.onload = render;
+    const t = setTimeout(render, 1000);
+    return () => clearTimeout(t);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +42,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch("/api/auth/forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken: captchaToken }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -44,6 +70,8 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value.toLowerCase())}
             className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent"
           />
+
+          <div id="captcha" className="mt-2" />
 
           <button className="btn btn-primary disabled:opacity-70" disabled={loading || !email}>
             {loading ? "Đang gửi..." : "Gửi liên kết đặt lại"}
