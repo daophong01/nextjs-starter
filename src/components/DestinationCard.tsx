@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Destination } from "@/lib/data";
 import WishlistButton from "./WishlistButton";
+import RatingStars from "./RatingStars";
 
 export default function DestinationCard({ d }: { d: Destination }) {
   return (
@@ -15,8 +16,8 @@ export default function DestinationCard({ d }: { d: Destination }) {
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-            {d.rating.toFixed(1)} ★
+          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded-full">
+            <RatingStars rating={d.rating} />
           </div>
         </div>
         <div className="p-4">

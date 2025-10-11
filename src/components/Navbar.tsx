@@ -11,6 +11,8 @@ const links = [
   { href: "/book", label: "Đặt chỗ" },
   { href: "/wishlist", label: "Yêu thích" },
   { href: "/account", label: "Tài khoản" },
+  { href: "/about", label: "Giới thiệu" },
+  { href: "/contact", label: "Liên hệ" },
 ];
 
 export default function Navbar() {
