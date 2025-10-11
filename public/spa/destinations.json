@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "bali",
+    "name": "Bali",
+    "description": "Thiên đường biển và nghỉ dưỡng.",
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
+    "rating": 4.7,
+    "price": 120,
+    "country": "Indonesia",
+    "tags": ["beach", "resort"]
+  },
+  {
+    "slug": "paris",
+    "name": "Paris",
+    "description": "Kinh đô ánh sáng, nghệ thuật và ẩm thực.",
+    "image": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1200&auto=format&fit=crop",
+    "rating": 4.8,
+    "price": 180,
+    "country": "France",
+    "tags": ["city", "food", "culture"]
+  },
+  {
+    "slug": "tokyo",
+    "name": "Tokyo",
+    "description": "Hiện đại, văn hóa độc đáo và công nghệ.",
+    "image": "https://images.unsplash.com/photo-1505066830449-1efeddceb993?q=80&w=1200&auto=format&fit=crop",
+    "rating": 4.6,
+    "price": 170,
+    "country": "Japan",
+    "tags": ["city", "culture"]
+  }
+]

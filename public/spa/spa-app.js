@@ -1,5 +1,5 @@
 // React 18 via ESM CDN is loaded from index.html
-// This SPA is light-weight and runs alongside Next.js backend/API.
+// Thuần frontend: tất cả dữ liệu lấy từ file tĩnh JSON.
 
 import React from "https://esm.sh/react@18";
 
@@ -17,7 +17,7 @@ function DestinationCard({ d }) {
     }),
     React.createElement("div", { style: { fontWeight: 600 } }, d.name),
     React.createElement("div", { style: { color: "rgba(0,0,0,.6)", fontSize: 13 } }, `${d.country} • ⭐ ${d.rating}`),
-    React.createElement("div", { style: { marginTop: 6, fontSize: 13 } }, `$${d.price}`),
+    React.createElement("div", { style: { marginTop: 6, fontSize: 13 } }, `${d.price}`),
   );
 }
 
@@ -28,9 +28,9 @@ function Home() {
   useEffect(() => {
     const run = async () => {
       try {
-        const res = await fetch("/api/destinations?pageSize=6");
+        const res = await fetch("/spa/destinations.json");
         const d = await res.json();
-        setItems(d.items || []);
+        setItems(d || []);
       } catch {
         setItems([]);
       } finally {
@@ -47,7 +47,7 @@ function Home() {
     React.createElement(
       "p",
       { style: { color: "rgba(0,0,0,.7)" } },
-      "Phiên bản React thuần chạy cùng backend Next.js. Dữ liệu lấy từ /api/destinations."
+      "Phiên bản React thuần chạy bằng dữ liệu tĩnh (JSON). Không phụ thuộc backend."
     ),
     loading
       ? React.createElement("div", null, "Đang tải...")
