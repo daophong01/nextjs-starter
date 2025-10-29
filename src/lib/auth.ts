@@ -35,16 +35,30 @@ export const authOptions: NextAuthOptions = {
         if (!user.emailVerified) return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.name || undefined } as any;
+        return { id: user.id, email: user.email, name: user.name || undefined, role: (user as any).role || "user" } as any;
       },
     }),
   ],
-  session: { strategy: "database" },
+  // Dùng JWT sessions để tránh phụ thuộc vào bảng Session khi DB gặp sự cố
+  session: { strategy: "jwt" },
   callbacks: {
-    async session({ session, user }) {
-      // expose role on session
+    async jwt({ token, user, account }) {
+      // Khi đăng nhập, gắn role từ user vào token
+      if (user) {
+        // @ts-expect-error augment
+        token.role = (user as any).role || "user";
+      } else if (!token.role && token.email) {
+        // nếu chưa có role trên token, thử lấy từ DB (best-effort)
+        const dbUser = await prisma.user.findUnique({ where: { email: token.email as string } }).catch(() => null);
+        // @ts-expect-error augment
+        token.role = (dbUser as any)?.role || token.role || "user";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // expose role on session from JWT token
       // @ts-expect-error augment
-      session.user.role = (user as any).role || "user";
+      session.user.role = (token as any).role || "user";
       return session;
     },
   },
