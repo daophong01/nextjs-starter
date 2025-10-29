@@ -21,6 +21,8 @@ model User {
   reviews        Review[]
   bookings       Booking[]
   resetTokens    PasswordResetToken[]
+  chatMessages   ChatMessage[]
+  transactions   PaymentTransaction[]
 }
 
 model Destination {
@@ -59,9 +61,11 @@ model Booking {
   to              String?
   name            String
   email           String
+  phone           String?
   note            String?
   price           Int
   status          String   @default("pending") // pending, paid, cancelled
+  paymentMethod   String?
   createdAt       DateTime @default(now())
   // Coupon fields
   couponCode      String?
@@ -74,6 +78,8 @@ model Booking {
   user            User?    @relation(fields: [userId], references: [id])
   destinationId   String?
   destinationRef  Destination? @relation(fields: [destinationId], references: [id])
+
+  transactions    PaymentTransaction[]
 }
 
 model Coupon {
@@ -90,6 +96,31 @@ model Coupon {
   validFrom        DateTime @default(now())
   validTo          DateTime?
   createdAt        DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model PaymentTransaction {
+  id                   String   @id @default(cuid())
+  bookingId            String
+  booking              Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  userId               String?
+  user                 User?    @relation(fields: [userId], references: [id])
+  amount               Int
+  currency             String   @default("VND")
+  paymentMethod        String
+  status               String   @default("pending")
+  gatewayTransactionId String?
+  gatewayResponse      String?
+  failureReason        String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now())
 }
 
 model PasswordResetToken {
