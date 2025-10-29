@@ -29,7 +29,7 @@ export default function SignInPage() {
     <main className="container">
       <div className="mt-16 max-w-md mx-auto card p-6 animate-soft-pop">
         <h1 className="text-2xl font-bold">Đăng nhập</h1>
-        <p className="text-sm/6 text-foreground/70 mt-1">Sử dụng tài khoản TravelGo hoặc đăng nhập GitHub.</p>
+        <p className="text-sm/6 text-foreground/70 mt-1">Sử dụng tài khoản TravelGo hoặc đăng nhập Google/GitHub.</p>
 
         <form onSubmit={submit} className="mt-4 grid gap-3">
           <label className="text-xs font-medium">Email</label>
@@ -54,7 +54,8 @@ export default function SignInPage() {
           {error && <p className="text-xs/6 text-red-600">{error}</p>}
         </form>
 
-        <div className="mt-4">
+        <div className="mt-4 flex items-center gap-3">
+          <button className="btn" onClick={() => signIn("google")}>Đăng nhập với Google</button>
           <button className="btn" onClick={() => signIn("github")}>Đăng nhập với GitHub</button>
         </div>
 
