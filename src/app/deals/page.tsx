@@ -1,15 +1,41 @@
 import DestinationCard from "../../components/DestinationCard";
 import { DESTINATIONS } from "../../data/destinations";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
-export default function DealsPage({ searchParams }: { searchParams?: { off?: string } }) {
+/**
+ * Deals page supports:
+ * - Percentage off via ?off=10|15|20
+ * - Coupon via ?code=SAVE10 (reads from DB Coupon if active)
+ */
+export default async function DealsPage({ searchParams }: { searchParams?: { off?: string; code?: string } }) {
+  // Base dataset
   const baseDeals = DESTINATIONS.filter((d) => d.tags.includes("beach") || d.tags.includes("city"));
   const topCities = Array.from(new Set(baseDeals.map((d) => d.country))).slice(0, 6);
-  const off = Math.min(20, Math.max(10, Number(searchParams?.off || 10)));
+
+  // Try coupon code from DB
+  let off = Math.min(20, Math.max(10, Number(searchParams?.off || 0))) || 0;
+  let code = (searchParams?.code || "").trim().toUpperCase();
+
+  if (code) {
+    try {
+      const coupon = await prisma.coupon.findUnique({ where: { code } });
+      if (coupon && coupon.isActive) {
+        if (coupon.discountType === "percentage") off = Math.max(off, coupon.discountValue);
+        else {
+          // fixed discount translate to approximate percentage against avg price 100 for preview
+          off = Math.max(off, Math.round((coupon.discountValue / 100) * 100));
+        }
+      }
+    } catch {
+      // ignore DB issues
+    }
+  }
+  if (!off) off = 10;
+
   const deals = baseDeals.map((d) => ({
     ...d,
     price: Math.max(0, Math.round(d.price * (1 - off / 100))),
-    // keep tags/country for card badges; DestinationCard still shows -10% badge by default
   }));
 
   return (
@@ -25,7 +51,9 @@ export default function DealsPage({ searchParams }: { searchParams?: { off?: str
               }}
             />
             <div className="absolute inset-0 flex items-center justify-between px-4">
-              <div className="text-base sm:text-lg font-semibold">Ưu đãi -{off}%</div>
+              <div className="text-base sm:text-lg font-semibold">
+                Ưu đãi -{off}% {code && `(mã ${code})`}
+              </div>
               <Link href="/destinations" className="btn btn-gradient">Khám phá ngay</Link>
             </div>
           </div>
@@ -35,6 +63,9 @@ export default function DealsPage({ searchParams }: { searchParams?: { off?: str
             <Link href="/deals?off=10" className="btn">-10%</Link>
             <Link href="/deals?off=15" className="btn">-15%</Link>
             <Link href="/deals?off=20" className="btn">-20%</Link>
+            <span className="text-sm/6 text-foreground/60 ml-2">hoặc dùng mã?</span>
+            <Link href="/deals?code=SAVE10" className="btn">SAVE10</Link>
+            <Link href="/deals?code=SAVE15" className="btn">SAVE15</Link>
           </div>
 
           <p className="mt-3 text-sm/6 text-foreground/70">
