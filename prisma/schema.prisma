@@ -129,6 +129,7 @@ model ContactMessage {
   name      String
   email     String
   message   String
+  processed Boolean  @default(false)
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())

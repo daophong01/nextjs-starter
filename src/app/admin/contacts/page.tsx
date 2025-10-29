@@ -7,6 +7,16 @@ export const metadata = {
   description: "Danh sách liên hệ khách hàng",
 };
 
+async function toggleProcessed(id: string, processed: boolean) {
+  "use server";
+  await prisma.contactMessage.update({ where: { id }, data: { processed } });
+}
+
+async function deleteContact(id: string) {
+  "use server";
+  await prisma.contactMessage.delete({ where: { id } });
+}
+
 export default async function AdminContactsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -44,6 +54,16 @@ export default async function AdminContactsPage() {
                   </div>
                 </div>
                 <div className="mt-2 text-sm/6">{m.message}</div>
+                <div className="mt-3 flex items-center gap-2">
+                  <form action={async () => toggleProcessed(m.id, !m.processed)}>
+                    <button className="btn" type="submit">
+                      {m.processed ? "Đánh dấu chưa xử lý" : "Đánh dấu đã xử lý"}
+                    </button>
+                  </form>
+                  <form action={async () => deleteContact(m.id)}>
+                    <button className="btn" type="submit">Xóa</button>
+                  </form>
+                </div>
               </div>
             ))}
           </div>
