@@ -6,14 +6,34 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 3000);
-    setName("");
-    setEmail("");
-    setMessage("");
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (res.ok) {
+        setSent(true);
+        setTimeout(() => setSent(false), 3000);
+        setName("");
+        setEmail("");
+        setMessage("");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || "Gửi liên hệ thất bại.");
+      }
+    } catch {
+      setError("Không thể kết nối máy chủ.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,8 +64,11 @@ export default function ContactPage() {
               onChange={(e) => setMessage(e.target.value)}
               className="rounded border border-black/[.08] dark:border-white/[.145] px-3 py-2 bg-transparent min-h-[100px]"
             />
-            <button className="rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90 w-max">Gửi</button>
+            <button className="rounded-full bg-foreground text-background px-6 py-2 hover:opacity-90 w-max disabled:opacity-70" disabled={loading}>
+              {loading ? "Đang gửi..." : "Gửi"}
+            </button>
             {sent && <p className="text-xs/6 text-green-700">Đã gửi! Chúng tôi sẽ phản hồi sớm.</p>}
+            {error && <p className="text-xs/6 text-red-600">{error}</p>}
           </form>
         </div>
 

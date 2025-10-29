@@ -23,6 +23,7 @@ model User {
   resetTokens    PasswordResetToken[]
   chatMessages   ChatMessage[]
   transactions   PaymentTransaction[]
+  contactMessages ContactMessage[]
 }
 
 model Destination {
@@ -121,6 +122,16 @@ model PaymentTransaction {
   failureReason        String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model PasswordResetToken {
