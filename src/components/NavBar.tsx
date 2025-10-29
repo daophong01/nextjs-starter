@@ -28,7 +28,6 @@ export default function NavBar() {
     return (
       <div className="flex items-center gap-3">
         <Link href="/signin" className="btn">Đăng nhập</Link>
-        <Link href="/signup" className="btn">Đăng ký</Link>
       </div>
     );
   };
