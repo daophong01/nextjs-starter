@@ -5,6 +5,7 @@ import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import Providers from "../components/Providers";
 import Script from "next/script";
+import LiveChat from "../components/LiveChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
           <NavBar />
           {children}
           <Footer />
+          <LiveChat />
         </Providers>
       </body>
     </html>
