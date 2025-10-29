@@ -40,6 +40,38 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
+  // Coupon validation if provided
+  let couponCode: string | undefined = undefined;
+  let discountAmount = 0;
+  const serviceFee = 15;
+  const tax = 0;
+
+  if (typeof (data as any).couponCode === "string") {
+    couponCode = String((data as any).couponCode || "").trim().toUpperCase();
+    if (couponCode) {
+      const c = await prisma.coupon.findUnique({ where: { code: couponCode } }).catch(() => null);
+      if (c && c.isActive) {
+        // basic validation; detailed checks happen in /api/coupons
+        const base = data.price;
+        if (base >= (c.minOrderAmount || 0)) {
+          discountAmount =
+            (c.discountType || "percentage") === "percentage"
+              ? Math.floor((base * c.discountValue) / 100)
+              : c.discountValue;
+          if (c.maxDiscountAmount) discountAmount = Math.min(discountAmount, c.maxDiscountAmount);
+          discountAmount = Math.max(0, Math.min(discountAmount, base));
+          // Update usedCount soft (no concurrency safe guarantee here)
+          await prisma.coupon.update({
+            where: { code: couponCode },
+            data: { usedCount: (c.usedCount || 0) + 1 },
+          });
+        }
+      }
+    }
+  }
+
+  const totalAmount = Math.max(0, data.price + serviceFee + tax - discountAmount);
+
   const booking = await prisma.booking.create({
     data: {
       destination: data.destination,
@@ -51,6 +83,11 @@ export async function POST(request: Request) {
       note: data.note,
       price: data.price,
       status: "pending",
+      couponCode,
+      discountAmount,
+      totalAmount,
+      serviceFee,
+      tax,
     },
   });
 
@@ -66,7 +103,7 @@ export async function POST(request: Request) {
           guests: booking.guests,
           from: booking.from || undefined,
           to: booking.to || undefined,
-          price: booking.price,
+          price: booking.totalAmount || booking.price,
           status: booking.status,
         })
       );
