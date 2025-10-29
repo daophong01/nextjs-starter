@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendEmail } from "@/lib/mailer";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Token invalid or expired" }, { status: 400 });
   }
 
+  const user = await prisma.user.findUnique({ where: { id: rec.userId } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
   const hash = await bcrypt.hash(password, 10);
   await prisma.user.update({
     where: { id: rec.userId },
@@ -22,6 +26,13 @@ export async function POST(request: Request) {
   });
 
   await prisma.passwordResetToken.delete({ where: { token } });
+
+  // Send notification email (optional)
+  await sendEmail({
+    to: user.email,
+    subject: "Mật khẩu của bạn đã được thay đổi",
+    html: `<p>Mật khẩu của tài khoản ${user.email} vừa được thay đổi. Nếu không phải bạn thực hiện, hãy liên hệ hỗ trợ ngay.</p>`,
+  });
 
   return NextResponse.json({ ok: true });
 }

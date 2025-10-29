@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
 import crypto from "crypto";
 import { render } from "@react-email/render";
 import ResetPasswordEmail from "@/emails/ResetPasswordEmail";
+import { sendEmail } from "@/lib/mailer";
 
 async function verifyTurnstile(token: string | undefined, remoteip?: string) {
   const secret = process.env.TURNSTILE_SECRET;
@@ -48,20 +48,12 @@ export async function POST(request: Request) {
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
   const resetLink = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const emailHtml = render(ResetPasswordEmail({ resetLink }));
-      await resend.emails.send({
-        from: process.env.RESEND_FROM || "TravelGo <noreply@travelgo.example>",
-        to: email,
-        subject: "Đặt lại mật khẩu",
-        html: emailHtml,
-      });
-    } catch {
-      // ignore email errors
-    }
-  }
+  const html = render(ResetPasswordEmail({ resetLink }));
+  await sendEmail({
+    to: email,
+    subject: "Đặt lại mật khẩu",
+    html,
+  });
 
   return NextResponse.json({ ok: true });
 }
