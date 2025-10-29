@@ -6,8 +6,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
+const isProd = (process.env.NEXTAUTH_URL || "").startsWith("https://");
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET, // explicit to avoid decryption mismatch
   providers: [
     // GitHub: hỗ trợ cả biến tên mới và cũ
     GitHubProvider({
@@ -41,6 +44,17 @@ export const authOptions: NextAuthOptions = {
   ],
   // Dùng JWT sessions để tránh phụ thuộc vào bảng Session khi DB gặp sự cố
   session: { strategy: "jwt" },
+  cookies: {
+    sessionToken: {
+      name: isProd ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProd,
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, user, account }) {
       // Khi đăng nhập, gắn role từ user vào token
