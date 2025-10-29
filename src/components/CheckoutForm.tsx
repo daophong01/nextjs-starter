@@ -98,6 +98,25 @@ export default function CheckoutForm({
     if (data?.url) window.location.href = data.url;
   };
 
+  const payVnpay = async () => {
+    if (!result?.id) return;
+    try {
+      const res = await fetch("/api/payments/vnpay/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: result.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data?.error || "Không thể khởi tạo VNPay.");
+      }
+    } catch {
+      setError("Lỗi kết nối VNPay.");
+    }
+  };
+
   return (
     <div className="grid gap-6 sm:grid-cols-[1.2fr_1fr]">
       <section className="card p-4">
@@ -164,7 +183,7 @@ export default function CheckoutForm({
           </div>
           <p className="font-semibold mt-2">Tổng: ${total}</p>
         </div>
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-wrap gap-3 mt-4">
           <button
             className="btn btn-primary disabled:opacity-70"
             onClick={submit}
@@ -173,9 +192,14 @@ export default function CheckoutForm({
             {submitting ? "Đang xử lý..." : "Lưu đặt chỗ"}
           </button>
           {result && (
-            <button className="btn" onClick={payStripe}>
-              Thanh toán Stripe
-            </button>
+            <>
+              <button className="btn" onClick={payStripe}>
+                Thanh toán Stripe
+              </button>
+              <button className="btn" onClick={payVnpay}>
+                Thanh toán VNPay
+              </button>
+            </>
           )}
         </div>
         {error && <p className="text-xs/6 text-red-600 mt-2">{error}</p>}
@@ -184,7 +208,7 @@ export default function CheckoutForm({
             Đặt chỗ đã lưu! Mã đơn: <span className="font-mono">{result.id}</span>
           </p>
         )}
-        <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán thực hiện qua Stripe (nếu cấu hình).</p>
+        <p className="text-xs/6 text-foreground/60 mt-2">Thanh toán thực hiện qua Stripe/VNPay (nếu cấu hình).</p>
       </aside>
     </div>
   );
