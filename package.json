@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
     "db:seed": "node scripts/seed.mjs",
+    "db:fix-images": "node scripts/fix-images.mjs",
     "test": "jest"
   },
   "dependencies": {
