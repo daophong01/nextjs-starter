@@ -8,6 +8,10 @@ export const metadata = {
   description: "Quản lý các đánh giá đã viết.",
 };
 
+function fmtDate(d: Date | string) {
+  return new Date(d).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
+
 export default async function AccountReviewsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -51,7 +55,7 @@ export default async function AccountReviewsPage() {
                   <div>
                     <div className="font-semibold">{r.slug}</div>
                     <div className="text-xs/6 text-foreground/70">
-                      ⭐ {r.rating} • {new Date(r.date).toLocaleString()}
+                      ⭐ {r.rating} • {fmtDate(r.date)}
                     </div>
                   </div>
                   <div className="text-sm/6">{r.comment}</div>

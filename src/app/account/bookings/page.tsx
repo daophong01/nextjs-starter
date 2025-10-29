@@ -8,6 +8,10 @@ export const metadata = {
   description: "Xem và quản lý đơn đặt chỗ của bạn.",
 };
 
+function fmtDate(d: Date | string) {
+  return new Date(d).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
+
 export default async function AccountBookingsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -52,7 +56,7 @@ export default async function AccountBookingsPage() {
                     <div className="font-mono text-xs/6">{o.id}</div>
                     <div className="text-sm/6">{o.destination || "Điểm đến"}</div>
                     <div className="text-xs/6 text-foreground/70">
-                      {o.guests} khách • {new Date(o.createdAt).toLocaleString()}
+                      {o.guests} khách • {fmtDate(o.createdAt)}
                     </div>
                   </div>
                   <div className="text-right">

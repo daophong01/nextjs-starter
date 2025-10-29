@@ -8,6 +8,10 @@ export const metadata = {
   description: "Thông tin cá nhân của bạn.",
 };
 
+function fmtDate(d: Date | string) {
+  return new Date(d).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
+
 export default async function AccountProfilePage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -32,7 +36,7 @@ export default async function AccountProfilePage() {
 
   const providers = (user?.accounts || []).map((a) => a.provider.toUpperCase());
   const verified = Boolean(user?.emailVerified);
-  const createdAt = user?.createdAt ? new Date(user.createdAt).toLocaleString() : "-";
+  const createdAt = user?.createdAt ? fmtDate(user.createdAt) : "-";
 
   // Recent 5 bookings
   const bookings = await prisma.booking.findMany({
@@ -89,7 +93,7 @@ export default async function AccountProfilePage() {
                   <div className="font-mono text-xs/6">{o.id}</div>
                   <div className="text-sm/6">{o.destination || "Điểm đến"}</div>
                   <div className="text-xs/6 text-foreground/70">
-                    {o.guests} khách • {new Date(o.createdAt).toLocaleString()}
+                    {o.guests} khách • {fmtDate(o.createdAt)}
                   </div>
                 </div>
                 <div className="text-right">

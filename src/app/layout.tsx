@@ -5,7 +5,9 @@ import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import Providers from "../components/Providers";
 import Script from "next/script";
-import LiveChat from "../components/LiveChat";
+import dynamic from "next/dynamic";
+
+const LiveChat = dynamic(() => import("../components/LiveChat"), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
