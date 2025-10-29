@@ -10,26 +10,37 @@ import {
   CreditCardIcon,
   Bars3Icon,
   XMarkIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
 
   const item = (
     href: string,
     label: string,
     Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  ) => (
-    <Link
-      href={href}
-      className="flex items-center gap-1.5 rounded px-2 py-1 hover:bg-black/[.04] dark:hover:bg-white/[.06] transition-colors"
-    >
-      {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
-      <span className="text-sm/6">{label}</span>
-    </Link>
-  );
+  ) => {
+    const active =
+      href === "/"
+        ? pathname === "/"
+        : pathname.startsWith(href);
+    return (
+      <Link
+        href={href}
+        className={`flex items-center gap-1.5 rounded px-2 py-1 transition-colors ${
+          active ? "nav-item-active" : "nav-item hover:bg-black/[.04] dark:hover:bg-white/[.06]"
+        }`}
+      >
+        {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+        <span className="text-sm/6">{label}</span>
+      </Link>
+    );
+  };
 
   const authArea = () => {
     if (session?.user?.email) {
@@ -46,7 +57,7 @@ export default function NavBar() {
             {initial}
           </Link>
           <button
-            className="btn"
+            className="btn btn-blue"
             onClick={() => signOut({ callbackUrl: "/" })}
             aria-label="Đăng xuất"
           >
@@ -57,7 +68,7 @@ export default function NavBar() {
     }
     return (
       <div className="flex items-center gap-3">
-        <Link href="/signin" className="btn">
+        <Link href="/signin" className="btn btn-blue">
           Đăng nhập
         </Link>
       </div>
@@ -70,19 +81,19 @@ export default function NavBar() {
         {/* Left: Brand + Desktop nav */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="inline-block rounded bg-black text-white dark:bg-white dark:text-black px-2 py-1 text-sm">
-              TG
+            <span className="brand-badge text-sm">TG</span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg,#6366f1,#ec4899)" }}>
+              TravelGo
             </span>
-            TravelGo
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             {item("/destinations", "Điểm đến", MapPinIcon)}
-            {item("/deals", "Ưu đãi", TagIcon)}
-            {item("/featured", "Nổi bật")}
-            {item("/categories", "Danh mục")}
+            {item("/categories", "Danh mục", TagIcon)}
+            {item("/featured", "Nổi bật", StarIcon)}
             {item("/stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
+            {item("/deals", "Ưu đãi", TagIcon)}
             {item("/about", "Giới thiệu", InformationCircleIcon)}
             {item("/contact", "Liên hệ", EnvelopeIcon)}
           </nav>
@@ -90,7 +101,7 @@ export default function NavBar() {
 
         {/* Right: actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/checkout" className="btn" aria-label="Đặt chỗ">
+          <Link href="/checkout" className="btn btn-gradient" aria-label="Đặt chỗ">
             <CreditCardIcon className="h-4 w-4 mr-1.5" aria-hidden="true" />
             Đặt chỗ
           </Link>
@@ -123,10 +134,10 @@ export default function NavBar() {
           <div className="container px-0 py-3 flex flex-col">
             <nav className="flex flex-col">
               {item("/destinations", "Điểm đến", MapPinIcon)}
-              {item("/deals", "Ưu đãi", TagIcon)}
-              {item("/featured", "Nổi bật")}
-              {item("/categories", "Danh mục")}
+              {item("/categories", "Danh mục", TagIcon)}
+              {item("/featured", "Nổi bật", StarIcon)}
               {item("/stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
+              {item("/deals", "Ưu đãi", TagIcon)}
               {item("/about", "Giới thiệu", InformationCircleIcon)}
               {item("/contact", "Liên hệ", EnvelopeIcon)}
             </nav>
@@ -134,7 +145,7 @@ export default function NavBar() {
               <Link
                 href="/checkout"
                 onClick={() => setOpen(false)}
-                className="btn"
+                className="btn btn-gradient"
               >
                 <CreditCardIcon className="h-4 w-4 mr-1.5" aria-hidden="true" />
                 Đặt chỗ

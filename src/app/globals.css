@@ -89,3 +89,30 @@ a:hover {
   color: var(--background);
   border-color: transparent;
 }
+
+/* Header branding & buttons */
+.brand-badge {
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  color: white;
+  border-radius: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+.btn-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  color: white;
+  border-color: transparent;
+}
+.btn-blue {
+  background: #2563eb;
+  color: white;
+  border-color: transparent;
+}
+
+/* Nav item states */
+.nav-item {
+  color: color-mix(in oklab, var(--foreground) 80%, black 20%);
+}
+.nav-item-active {
+  color: #2563eb;
+  font-weight: 600;
+}
