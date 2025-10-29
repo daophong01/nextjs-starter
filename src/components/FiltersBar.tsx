@@ -96,6 +96,25 @@ export default function FiltersBar() {
             className="w-full rounded border border-black/[.08] dark:border-white/[.145] bg-transparent px-3 py-2"
           />
         </div>
+
+        <div>
+          <label className="text-xs font-medium">Khoảng ngày</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={sp.get("from") || ""}
+              onChange={(e) => update("from", e.target.value || undefined)}
+              className="rounded border border-black/[.08] dark:border-white/[.145] bg-transparent px-3 py-2"
+            />
+            <span className="text-xs/6">đến</span>
+            <input
+              type="date"
+              value={sp.get("to") || ""}
+              onChange={(e) => update("to", e.target.value || undefined)}
+              className="rounded border border-black/[.08] dark:border-white/[.145] bg-transparent px-3 py-2"
+            />
+          </div>
+        </div>
       </div>
 
       <div>

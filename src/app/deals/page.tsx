@@ -2,9 +2,15 @@ import DestinationCard from "../../components/DestinationCard";
 import { DESTINATIONS } from "../../data/destinations";
 import Link from "next/link";
 
-export default function DealsPage() {
+export default function DealsPage({ searchParams }: { searchParams?: { off?: string } }) {
   const baseDeals = DESTINATIONS.filter((d) => d.tags.includes("beach") || d.tags.includes("city"));
   const topCities = Array.from(new Set(baseDeals.map((d) => d.country))).slice(0, 6);
+  const off = Math.min(20, Math.max(10, Number(searchParams?.off || 10)));
+  const deals = baseDeals.map((d) => ({
+    ...d,
+    price: Math.max(0, Math.round(d.price * (1 - off / 100))),
+    // keep tags/country for card badges; DestinationCard still shows -10% badge by default
+  }));
 
   return (
     <main className="container">
@@ -19,21 +25,28 @@ export default function DealsPage() {
               }}
             />
             <div className="absolute inset-0 flex items-center justify-between px-4">
-              <div className="text-base sm:text-lg font-semibold">Ưu đãi -10% cho mùa này</div>
+              <div className="text-base sm:text-lg font-semibold">Ưu đãi -{off}%</div>
               <Link href="/destinations" className="btn btn-gradient">Khám phá ngay</Link>
             </div>
           </div>
 
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm/6 text-foreground/70">Chọn mức ưu đãi:</span>
+            <Link href="/deals?off=10" className="btn">-10%</Link>
+            <Link href="/deals?off=15" className="btn">-15%</Link>
+            <Link href="/deals?off=20" className="btn">-20%</Link>
+          </div>
+
           <p className="mt-3 text-sm/6 text-foreground/70">
-            Tổng hợp các điểm đến có ưu đãi -10%. Giá hiển thị đã áp dụng khuyến mãi.
+            Giá hiển thị đã áp dụng khuyến mãi tương ứng.
           </p>
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {baseDeals.map((d) => (
-              <DestinationCard key={d.slug} d={d} />
+            {deals.map((d) => (
+              <DestinationCard key={d.slug} d={d as any} />
             ))}
           </div>
-          {baseDeals.length === 0 && (
+          {deals.length === 0 && (
             <div className="mt-6 card p-6">Hiện chưa có ưu đãi nào. Vui lòng quay lại sau.</div>
           )}
         </div>

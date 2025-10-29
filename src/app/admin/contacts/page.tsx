@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import AdminContactReply from "@/components/AdminContactReply";
 
 export const metadata = {
   title: "Liên hệ - Admin",
@@ -54,6 +55,7 @@ export default async function AdminContactsPage() {
                   </div>
                 </div>
                 <div className="mt-2 text-sm/6">{m.message}</div>
+                <AdminContactReply id={m.id} email={m.email} />
                 <div className="mt-3 flex items-center gap-2">
                   <form action={async () => toggleProcessed(m.id, !m.processed)}>
                     <button className="btn" type="submit">
