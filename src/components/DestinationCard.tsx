@@ -3,9 +3,10 @@ import Link from "next/link";
 import type { Destination } from "../data/destinations";
 import { StarIcon, MapPinIcon } from "@heroicons/react/24/solid";
 
-export default function DestinationCard({ d }: { d: Destination }) {
-  const isDeal = d.tags.includes("beach") || d.tags.includes("city");
-  const dealPrice = isDeal ? Math.max(0, Math.round(d.price * 0.9)) : d.price;
+export default function DestinationCard({ d, discountPercent }: { d: Destination; discountPercent?: number }) {
+  const isDeal = typeof discountPercent === "number" ? discountPercent > 0 : d.tags.includes("beach") || d.tags.includes("city");
+  const percent = typeof discountPercent === "number" ? discountPercent : 10;
+  const priceShown = isDeal ? Math.max(0, Math.round(d.price * (1 - percent / 100))) : d.price;
 
   return (
     <Link href={`/destinations/${d.slug}`} className="group card overflow-hidden">
@@ -19,7 +20,7 @@ export default function DestinationCard({ d }: { d: Destination }) {
         />
         {isDeal && (
           <span className="absolute top-3 left-3 text-xs/6 px-2 py-1 rounded-full bg-foreground/90 text-background">
-            -10% ưu đãi
+            -{percent}% ưu đãi
           </span>
         )}
         <span className="absolute top-3 right-3 text-xs/6 px-2 py-1 rounded-full border border-black/[.08] dark:border-white/[.145] bg-background/80">
@@ -40,7 +41,7 @@ export default function DestinationCard({ d }: { d: Destination }) {
         <p className="text-sm/6 text-foreground/70 line-clamp-2 mt-1">{d.description}</p>
         <div className="mt-3 flex items-center justify-between">
           <span className="font-mono text-sm/6">
-            Từ ${dealPrice}
+            Từ ${priceShown}
             {isDeal && <span className="ml-2 line-through opacity-60">${d.price}</span>}
           </span>
           <span className="text-sm/6 underline">Xem chi tiết →</span>

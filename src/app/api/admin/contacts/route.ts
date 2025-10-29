@@ -11,11 +11,28 @@ async function ensureAdmin() {
   return { status: 200 as const, user };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const { status } = await ensureAdmin();
   if (status !== 200) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
+  const { searchParams } = new URL(request.url);
+  const q = (searchParams.get("q") || "").trim().toLowerCase();
+  const processed = searchParams.get("processed"); // "true" | "false" | null (all)
+
+  const where: any = {};
+  if (processed === "true") where.processed = true;
+  else if (processed === "false") where.processed = false;
+
+  if (q) {
+    where.OR = [
+      { name: { contains: q } },
+      { email: { contains: q } },
+      { message: { contains: q } },
+    ];
+  }
+
   const items = await prisma.contactMessage.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     take: 200,
   });

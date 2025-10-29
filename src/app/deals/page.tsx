@@ -74,7 +74,7 @@ export default async function DealsPage({ searchParams }: { searchParams?: { off
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {deals.map((d) => (
-              <DestinationCard key={d.slug} d={d as any} />
+              <DestinationCard key={d.slug} d={d as any} discountPercent={off} />
             ))}
           </div>
           {deals.length === 0 && (
