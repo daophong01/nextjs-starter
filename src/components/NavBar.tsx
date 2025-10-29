@@ -80,7 +80,9 @@ export default function NavBar() {
           <nav className="hidden md:flex items-center gap-1">
             {item("/destinations", "Điểm đến", MapPinIcon)}
             {item("/deals", "Ưu đãi", TagIcon)}
-            {item("/#stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
+            {item("/featured", "Nổi bật")}
+            {item("/categories", "Danh mục")}
+            {item("/stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
             {item("/about", "Giới thiệu", InformationCircleIcon)}
             {item("/contact", "Liên hệ", EnvelopeIcon)}
           </nav>
@@ -122,7 +124,9 @@ export default function NavBar() {
             <nav className="flex flex-col">
               {item("/destinations", "Điểm đến", MapPinIcon)}
               {item("/deals", "Ưu đãi", TagIcon)}
-              {item("/#stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
+              {item("/featured", "Nổi bật")}
+              {item("/categories", "Danh mục")}
+              {item("/stories", "Câu chuyện", ChatBubbleLeftRightIcon)}
               {item("/about", "Giới thiệu", InformationCircleIcon)}
               {item("/contact", "Liên hệ", EnvelopeIcon)}
             </nav>
