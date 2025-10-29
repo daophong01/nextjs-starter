@@ -55,8 +55,8 @@ export default function SignInPage() {
         </form>
 
         <div className="mt-4 flex items-center gap-3">
-          <button className="btn" onClick={() => signIn("google")}>Đăng nhập với Google</button>
-          <button className="btn" onClick={() => signIn("github")}>Đăng nhập với GitHub</button>
+          <button className="btn" onClick={() => signIn("google", { callbackUrl: "/" })}>Đăng nhập với Google</button>
+          <button className="btn" onClick={() => signIn("github", { callbackUrl: "/" })}>Đăng nhập với GitHub</button>
         </div>
 
         <p className="text-xs/6 mt-4">
