@@ -18,6 +18,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
+  const amount = (booking.totalAmount || booking.price) * 100;
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
         price_data: {
           currency: "usd",
           product_data: { name: booking.destination || "TravelGo Booking" },
-          unit_amount: booking.price * 100,
+          unit_amount: amount,
         },
         quantity: 1,
       },
@@ -34,6 +36,19 @@ export async function POST(request: Request) {
     success_url: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/checkout?success=true&booking=${booking.id}`,
     cancel_url: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/checkout?cancelled=true&booking=${booking.id}`,
     metadata: { bookingId: booking.id },
+  });
+
+  // Create transaction record
+  await prisma.paymentTransaction.create({
+    data: {
+      bookingId: booking.id,
+      userId: booking.userId || null,
+      amount: (booking.totalAmount || booking.price),
+      currency: "USD",
+      paymentMethod: "stripe",
+      status: "pending",
+      gatewayTransactionId: session.id,
+    },
   });
 
   return NextResponse.json({ id: session.id, url: session.url });
