@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "https://esm.sh/react@18.2.0";
-import { Routes, Route, Link, useParams, useSearchParams } from "https://esm.sh/react-router-dom@6.22.3";
+import { Routes, Route, Link, useParams, useSearchParams, useNavigate } from "https://esm.sh/react-router-dom@6.22.3";
 
 const API = "";
+const getToken = () => localStorage.getItem("token") || "";
+const setToken = (t) => localStorage.setItem("token", t);
 
 // Simple components
 const Button = (props) => <button {...props} className={`btn ${props.className || ""}`}>{props.children}</button>;
@@ -28,6 +30,12 @@ function Pagination({ page, pages, onGo }) {
 
 // NavBar
 function NavBar() {
+  const nav = useNavigate();
+  const [tokenPresent, setTokenPresent] = useState(!!getToken());
+  useEffect(() => {
+    const i = setInterval(() => setTokenPresent(!!getToken()), 500);
+    return () => clearInterval(i);
+  }, []);
   return (
     <nav className="border-b border-black/10">
       <div className="container py-3 flex items-center justify-between">
@@ -39,6 +47,11 @@ function NavBar() {
           <Link className="btn" to="/blog">Blog</Link>
           <Link className="btn" to="/account">Account</Link>
           <Link className="btn" to="/admin">Admin</Link>
+          {tokenPresent ? (
+            <Button onClick={()=>{ localStorage.removeItem("token"); setTokenPresent(false); nav("/"); }}>Logout</Button>
+          ) : (
+            <Link className="btn" to="/login">Login</Link>
+          )}
         </div>
       </div>
     </nav>
@@ -64,7 +77,115 @@ function Home() {
 }
 
 // Destinations
-function Destinations() {
+function DestinationsAdmin({ token }) {
+  const [items, setItems] = useState([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type":"application/json" } : { "Content-Type":"application/json" };
+
+  const load = async () => {
+    const res = await fetch("/api/admin/destinations", { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).catch(()=>({ items: [] }));
+    setItems(res.items || []);
+  };
+  useEffect(()=>{ load(); }, []);
+
+  const create = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const body = Object.fromEntries(fd.entries());
+    body.rating = Number(body.rating || 0);
+    body.price = Number(body.price || 0);
+    body.tags = (body.tags || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const res = await fetch("/api/admin/destinations", { method:"POST", headers, body: JSON.stringify(body) });
+    if (res.ok) { setShowCreate(false); e.currentTarget.reset(); load(); }
+  };
+
+  const update = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const body = Object.fromEntries(fd.entries());
+    body.id = editing.id;
+    body.rating = Number(body.rating || editing.rating || 0);
+    body.price = Number(body.price || editing.price || 0);
+    body.tags = (body.tags || editing.tags || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const res = await fetch("/api/admin/destinations", { method:"PATCH", headers, body: JSON.stringify(body) });
+    if (res.ok) { setEditing(null); load(); }
+  };
+
+  const remove = async (id) => {
+    if (!confirm("Xóa điểm đến này?")) return;
+    await fetch(`/api/admin/destinations?id=${encodeURIComponent(id)}`, { method:"DELETE", headers: { Authorization: `Bearer ${token}` } });
+    load();
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold">Destinations</h2>
+        <Button className="btn-primary" onClick={()=>setShowCreate(true)}>Create</Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3 mt-4">
+        {items.map(d=> (
+          <Card key={d.id} className="p-3">
+            <div className="font-semibold">{d.name}</div>
+            <div className="text-xs text-black/60">{d.country}</div>
+            <div className="mt-2 flex items-center gap-2">
+              <Button onClick={()=>setEditing(d)}>Edit</Button>
+              <Button onClick={()=>remove(d.id)}>Delete</Button>
+            </div>
+          </Card>
+        ))}
+        {items.length===0 && <Card className="p-4">No data.</Card>}
+      </div>
+
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <Card className="p-4 w-full max-w-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Create Destination</h3>
+              <Button onClick={()=>setShowCreate(false)}>Close</Button>
+            </div>
+            <form className="grid gap-2 mt-3" onSubmit={create}>
+              <Input name="slug" placeholder="slug" required />
+              <Input name="name" placeholder="name" required />
+              <Input name="country" placeholder="country" />
+              <Input name="image" placeholder="image url" />
+              <Input name="price" placeholder="price" type="number" />
+              <Input name="rating" placeholder="rating" type="number" step="0.1" />
+              <Input name="tags" placeholder="tags (comma separated)" />
+              <textarea name="description" placeholder="description" className="input min-h-[80px]"></textarea>
+              <Button className="btn-primary" type="submit">Create</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <Card className="p-4 w-full max-w-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Edit Destination</h3>
+              <Button onClick={()=>setEditing(null)}>Close</Button>
+            </div>
+            <form className="grid gap-2 mt-3" onSubmit={update}>
+              <Input name="slug" placeholder="slug" defaultValue={editing.slug} required />
+              <Input name="name" placeholder="name" defaultValue={editing.name} required />
+              <Input name="country" placeholder="country" defaultValue={editing.country} />
+              <Input name="image" placeholder="image url" defaultValue={editing.image} />
+              <Input name="price" placeholder="price" type="number" defaultValue={editing.price} />
+              <Input name="rating" placeholder="rating" type="number" step="0.1" defaultValue={editing.rating} />
+              <Input name="tags" placeholder="tags (comma separated)" defaultValue={editing.tags} />
+              <textarea name="description" placeholder="description" className="input min-h-[80px]" defaultValue={editing.description}></textarea>
+              <Button className="btn-primary" type="submit">Save</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   useEffect(() => {
@@ -216,35 +337,83 @@ function TourDetail() {
 function Deals() {
   const [items, setItems] = useState([]);
   const [off, setOff] = useState(10);
+  const [code, setCode] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [couponInfo, setCouponInfo] = useState(null);
+
   useEffect(()=>{ fetch(`/api/destinations`).then(r=>r.json()).then(data=>setItems(data.items||[])).catch(()=>setItems([])); },[]);
   const dealsBase = items.filter(d=> (d.tags||[]).includes?.("beach") || (d.tags||[]).includes?.("city"));
-  const deals = dealsBase.map(d => ({ ...d, dealPrice: Math.max(0, Math.round(d.price * (1 - off/100))) }));
+
+  const applyCode = async () => {
+    if (!code) return;
+    setApplying(true);
+    try {
+      // Validate code against first item's price as reference
+      const ref = dealsBase[0]?.price || 100;
+      const res = await fetch("/api/coupons", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code, amount: ref }) });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setCouponInfo(data);
+        setOff(data.percent || off);
+      } else {
+        setCouponInfo(null);
+      }
+    } catch {
+      setCouponInfo(null);
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const computeDealPrice = (price) => {
+    if (couponInfo && code) {
+      // For percentage coupons, apply percent; for fixed, call API per item to be precise (simplified here)
+      if (couponInfo.type === "percentage") {
+        const p = Math.max(0, Math.round(price * (1 - (couponInfo.percent || off)/100)));
+        return p;
+      } else {
+        // approximate fixed discount proportionally based on reference
+        const ref = dealsBase[0]?.price || price;
+        const ratio = (couponInfo.discount || 0) / ref;
+        const d = Math.max(0, Math.round(price * (1 - ratio)));
+        return d;
+      }
+    }
+    return Math.max(0, Math.round(price * (1 - off/100)));
+  };
+
   return (
     <main className="container">
       <h1 className="text-2xl font-bold mt-8">Deals</h1>
       <div className="mt-3 flex items-center gap-2">
-        <Select value={off} onChange={(e)=>setOff(Number(e.target.value))}>
+        <Select value={off} onChange={(e)=>{ setCouponInfo(null); setOff(Number(e.target.value)); }}>
           <option value={10}>-10%</option>
           <option value={15}>-15%</option>
           <option value={20}>-20%</option>
         </Select>
         <Badge>Ưu đãi -{off}%</Badge>
+        <Input value={code} onChange={(e)=>setCode(e.target.value.toUpperCase())} placeholder="Mã coupon (VD: SAVE10)" />
+        <Button onClick={applyCode} className="btn-primary" disabled={applying || !code}>{applying? "Đang áp dụng..." : "Áp dụng mã"}</Button>
       </div>
+      {couponInfo && <p className="text-xs text-black/70 mt-1">Mã hợp lệ • Giảm {couponInfo.type==="percentage" ? `${couponInfo.percent}%` : `${couponInfo.discount}`} (tham chiếu).</p>}
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {deals.map(d=> (
-          <Card key={d.slug} className="overflow-hidden">
-            <img src={d.image} alt={d.name} className="h-40 w-full object-cover"/>
-            <div className="p-3">
-              <div className="font-semibold">{d.name} <Badge className="ml-2">-{off}%</Badge></div>
-              <div className="mt-2 text-sm">
-                <span className="font-mono">${d.dealPrice}</span>
-                <span className="ml-2 line-through opacity-60">${d.price}</span>
+        {dealsBase.map(d=> {
+          const dp = computeDealPrice(d.price);
+          return (
+            <Card key={d.slug} className="overflow-hidden">
+              <img src={d.image} alt={d.name} className="h-40 w-full object-cover"/>
+              <div className="p-3">
+                <div className="font-semibold">{d.name} <Badge className="ml-2">-{couponInfo?.percent || off}%</Badge></div>
+                <div className="mt-2 text-sm">
+                  <span className="font-mono">${dp}</span>
+                  <span className="ml-2 line-through opacity-60">${d.price}</span>
+                </div>
+                <Link to={`/destinations/${d.slug}`} className="text-sm underline mt-2 inline-block">Xem chi tiết →</Link>
               </div>
-              <Link to={`/destinations/${d.slug}`} className="text-sm underline mt-2 inline-block">Xem chi tiết →</Link>
-            </div>
-          </Card>
-        ))}
-        {deals.length===0 && <Card className="p-4">Chưa có ưu đãi phù hợp.</Card>}
+            </Card>
+          );
+        })}
+        {dealsBase.length===0 && <Card className="p-4">Chưa có ưu đãi phù hợp.</Card>}
       </div>
     </main>
   );
@@ -312,6 +481,12 @@ function Account() {
 
 // Admin SPA basic panels (read-only / simple actions)
 function Admin() {
+  const nav = useNavigate();
+  const token = getToken();
+  useEffect(() => {
+    if (!token) nav("/login");
+  }, [token]);
+
   const [tab, setTab] = useState("destinations");
   const [data, setData] = useState([]);
   const load = async () => {
@@ -321,25 +496,25 @@ function Admin() {
     if (tab==="bookings") url="/api/bookings";
     if (tab==="contacts") url="/api/admin/contacts";
     if (tab==="comments") url="/api/admin/comments";
-    const res = await fetch(url).then(r=>r.json()).catch(()=>[]);
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(r=>r.json()).catch(()=>[]);
     setData(res.items || res || []);
   };
   useEffect(()=>{ load(); }, [tab]);
 
   const approveComment = async (id, approved) => {
-    await fetch("/api/admin/comments", { method:"PATCH", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ id, approved }) });
+    await fetch("/api/admin/comments", { method:"PATCH", headers:{ "Content-Type":"application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ id, approved }) });
     load();
   };
   const deleteComment = async (id) => {
-    await fetch(`/api/admin/comments?id=${encodeURIComponent(id)}`, { method:"DELETE" });
+    await fetch(`/api/admin/comments?id=${encodeURIComponent(id)}`, { method:"DELETE", headers:{ Authorization: `Bearer ${token}` } });
     load();
   };
   const toggleContact = async (id, processed) => {
-    await fetch("/api/admin/contacts", { method:"PATCH", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ id, processed }) });
+    await fetch("/api/admin/contacts", { method:"PATCH", headers:{ "Content-Type":"application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ id, processed }) });
     load();
   };
   const deleteBooking = async (id) => {
-    await fetch(`/api/admin/bookings?id=${encodeURIComponent(id)}`, { method:"DELETE" });
+    await fetch(`/api/admin/bookings?id=${encodeURIComponent(id)}`, { method:"DELETE", headers:{ Authorization: `Bearer ${token}` } });
     load();
   };
 
@@ -356,14 +531,7 @@ function Admin() {
 
       <section className="mt-6">
         {tab==="destinations" && (
-          <div className="grid gap-3 sm:grid-cols-3">
-            {data.items ? data.items.map(d=> (
-              <Card key={d.id} className="p-3">
-                <div className="font-semibold">{d.name}</div>
-                <div className="text-xs text-black/60">{d.country}</div>
-              </Card>
-            )) : <Card className="p-4">No data.</Card>}
-          </div>
+          <DestinationsAdmin token={token} />
         )}
 
         {tab==="reviews" && (
