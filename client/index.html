@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TravelGo (React SPA)</title>
+    <link rel="icon" href="/favicon.ico" />
+    <!-- Tailwind CDN (JIT) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: "#ffffff",
+              foreground: "#171717",
+              accent: "#2563eb",
+              "accent-2": "#14b8a6",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+      .container { margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; max-width: 72rem; }
+      .card { border-radius: 0.75rem; border: 1px solid rgba(23,23,23,0.08); background: rgba(255,255,255,0.96); }
+      .btn { border-radius: 9999px; padding: 0.5rem 1rem; border: 1px solid rgba(23,23,23,0.08); }
+      .btn-primary { background: #171717; color: white; border-color: transparent; }
+    </style>
+  </head>
+  <body class="bg-background text-foreground">
+    <div id="root"></div>
+    <!-- React, ReactDOM, React Router via ESM CDN -->
+    <script type="module">
+      import React, { StrictMode } from "https://esm.sh/react@18.2.0";
+      import { createRoot } from "https://esm.sh/react-dom@18.2.0/client";
+      import { BrowserRouter } from "https://esm.sh/react-router-dom@6.22.3";
+      import App from "./app.js";
+
+      const root = createRoot(document.getElementById("root"));
+      root.render(
+        React.createElement(StrictMode, null,
+          React.createElement(BrowserRouter, null, React.createElement(App))
+        )
+      );
+    </script>
+  </body>
+</html>
