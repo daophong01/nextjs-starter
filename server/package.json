@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "NODE_ENV=development node --watch ./src/index.js",
     "start": "NODE_ENV=production node ./src/index.js",
-    "format:check": "prettier --check 'src/**/*.js'"
+    "format:check": "prettier --check 'src/**/*.js'",
+    "lint": "eslint 'src/**/*.js'"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -20,6 +21,11 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "eslint": "^9.14.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1"
   }
 }
