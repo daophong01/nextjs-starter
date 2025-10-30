@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import { PrismaClient } from "@prisma/client";
+import { DESTINATIONS, TOURS, POSTS } from "./data.js";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -19,21 +20,60 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Health
 app.get("/api/health", (req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// Destinations (fallback to static data if DB not ready)
-import fs from "fs";
-const staticDest = (() => {
-  try {
-    const p = path.join(process.cwd(), "src", "data", "destinations.ts");
-    return [];
-  } catch {
-    return [];
-  }
-})();
-
+// Destinations with static fallback
 app.get("/api/destinations", async (req, res) => {
-  // If you have a Destination table, implement DB query here
-  // For now, read from local static file if available
-  res.json({ items: staticDest, total: staticDest.length });
+  try {
+    // If you have Destination table, replace with prisma query
+    return res.json({ items: DESTINATIONS, total: DESTINATIONS.length });
+  } catch {
+    return res.json({ items: [], total: 0 });
+  }
+});
+app.get("/api/destinations/:slug", async (req, res) => {
+  const slug = String(req.params.slug || "");
+  const d = DESTINATIONS.find(x => x.slug === slug);
+  if (!d) return res.status(404).json({ error: "Not found" });
+  return res.json(d);
+});
+
+// Reviews for destinations (simple model via Prisma Comment tied to post, or create a dedicated table if needed)
+// Here we use Comment with a special post slug mapping; for production use a Review table.
+app.get("/api/reviews", async (req, res) => {
+  const slug = String(req.query.slug || "");
+  if (!slug) return res.status(400).json({ error: "Missing slug" });
+  try {
+    const items = await prisma.review.findMany({
+      where: { slug },
+      orderBy: { date: "desc" },
+      take: 50,
+    });
+    return res.json({ items });
+  } catch {
+    return res.json({ items: [] });
+  }
+});
+app.post("/api/reviews", async (req, res) => {
+  const { slug, author, rating, comment } = req.body || {};
+  if (!slug || !author || !rating) return res.status(400).json({ error: "Missing fields" });
+  try {
+    const created = await prisma.review.create({
+      data: { slug, author, rating: Number(rating), comment: String(comment || ""), date: new Date().toISOString() },
+    });
+    return res.json({ ok: true, id: created.id });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+
+// Tours
+app.get("/api/tours", async (req, res) => {
+  res.json({ items: TOURS, total: TOURS.length });
+});
+app.get("/api/tours/:slug", async (req, res) => {
+  const slug = String(req.params.slug || "");
+  const t = TOURS.find(x => x.slug === slug);
+  if (!t) return res.status(404).json({ error: "Not found" });
+  return res.json(t);
 });
 
 // Blog posts
@@ -43,16 +83,9 @@ app.get("/api/blog/posts", async (req, res) => {
       orderBy: { date: "desc" },
       take: 100,
     });
-    return res.json(posts);
-  } catch {
-    // fallback to static data file
-    try {
-      const data = await import("../../src/data/blog.ts");
-      return res.json(data.POSTS);
-    } catch {
-      return res.json([]);
-    }
-  }
+    if (posts.length) return res.json(posts);
+  } catch {}
+  return res.json(POSTS);
 });
 
 // Blog comments
@@ -197,7 +230,7 @@ app.post("/api/uploads", upload.single("file"), async (req, res) => {
   return res.json({ ok: true, url: `/uploads/${folder}/${filename}`, name: filename });
 });
 
-// Serve client (static SPA) if needed
+// Serve client (static SPA)
 app.use(express.static(path.join(process.cwd(), "client")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(process.cwd(), "client", "index.html"));
