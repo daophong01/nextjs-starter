@@ -4,6 +4,8 @@ import SortBar from "../../components/SortBar";
 import PaginationBar from "../../components/PaginationBar";
 import { DESTINATIONS } from "../../data/destinations";
 
+export const dynamic = "force-dynamic";
+
 type Search = {
   q?: string;
   from?: string;
@@ -107,18 +109,19 @@ async function fetchDestinations(searchParams: Search) {
 export default async function DestinationsPage({
   searchParams,
 }: {
-  searchParams?: Search;
+  searchParams: Promise<Search>;
 }) {
-  const pageSize = Math.max(1, Number(searchParams?.pageSize || 9));
-  const data = await fetchDestinations({ ...(searchParams || {}), pageSize: String(pageSize) });
+  const sp = await searchParams;
+  const pageSize = Math.max(1, Number(sp?.pageSize || 9));
+  const data = await fetchDestinations({ ...(sp || {}), pageSize: String(pageSize) });
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
       <h1 className="text-2xl sm:text-3xl font-bold mt-8">Danh sách điểm đến</h1>
-      {(searchParams?.from || searchParams?.to || searchParams?.q) && (
+      {(sp?.from || sp?.to || sp?.q) && (
         <p className="text-sm/6 text-foreground/70 mt-2">
-          Kết quả cho: {searchParams?.q && `"${searchParams.q}"`} {searchParams?.from && `• từ ${searchParams.from}`}{" "}
-          {searchParams?.to && `• đến ${searchParams.to}`}
+          Kết quả cho: {sp?.q && `"${sp.q}"`} {sp?.from && `• từ ${sp.from}`}{' '}
+          {sp?.to && `• đến ${sp.to}`}
         </p>
       )}
 
