@@ -10,6 +10,7 @@ on:
 jobs:
   server-ci:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,18 +19,55 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+
+      - name: Cache server node_modules
+        uses: actions/cache@v4
+        with:
+          path: server/node_modules
+          key: server-node-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+          restore-keys: |
+            server-node-${{ runner.os }}-
+
+      - name: Cache Prisma engines
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/prisma
+          key: prisma-engines-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+          restore-keys: |
+            prisma-engines-${{ runner.os }}-
 
       - name: Install server dependencies
         working-directory: server
-        run: npm ci || npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Prisma generate
+        working-directory: server
         run: npx prisma generate
 
       - name: Basic boot check
         working-directory: server
         run: node -e "console.log('Server install OK')"
+
+      - name: Smoke test - start server and curl /api/health
+        env:
+          DATABASE_URL: "mysql://root:password@localhost:3306/travelgo"
+          JWT_SECRET: "ci-secret"
+          ADMIN_EMAIL: "admin@example.com"
+          ADMIN_PASSWORD: "admin123"
+        run: |
+          # start server in background
+          node ./src/index.js & SERVER_PID=$!
+          # wait up to 15s for server to be ready
+          timeout 15 bash -c 'until curl -sSf http://localhost:4000/api/health > /dev/null; do sleep 1; done'
+          # hit health endpoint
+          curl -sSf http://localhost:4000/api/health || (echo "Health check failed" && exit 1)
+          # stop server
+          kill $SERVER_PID || true
 
       - name: List API files
         run: ls -la server/src
