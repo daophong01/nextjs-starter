@@ -97,12 +97,12 @@ export default async function Home() {
       </section>
 
       {/* Featured */}
-      <section className="mt-12">
+      <section className="mt-12 fade-in">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl sm:text-2xl font-semibold">Điểm đến nổi bật</h2>
           <a href="/destinations" className="underline text-sm/6">Xem tất cả →</a>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 stagger">
           {featured.map((d) => (
             <DestinationCard key={d.slug} d={d} />
           ))}
@@ -110,7 +110,7 @@ export default async function Home() {
       </section>
 
       {/* Reviews */}
-      <section className="mt-12">
+      <section className="mt-12 fade-in">
         <h2 className="text-xl sm:text-2xl font-semibold mb-4">Đánh giá mới nhất</h2>
         <div className="grid gap-6 sm:grid-cols-3">
           {latestReviews.map((r) => (
