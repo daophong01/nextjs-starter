@@ -5,12 +5,23 @@ import TopBannerCarousel from "../components/TopBannerCarousel";
 import { DESTINATIONS } from "../data/destinations";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 60;
+
+async function getLatestReviews() {
+  // Timeout 300ms để tránh chậm render nếu DB chậm/cold start
+  const timeout = new Promise<[]>(resolve => setTimeout(() => resolve([] as any), 300));
+  try {
+    const query = prisma.review.findMany({ orderBy: { date: "desc" }, take: 3 });
+    const res: any = await Promise.race([query, timeout]);
+    return Array.isArray(res) ? res : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
   const featured = DESTINATIONS.slice(0, 6);
-  const latestReviews = await prisma.review.findMany({
-    orderBy: { date: "desc" },
-    take: 3,
-  });
+  const latestReviews = await getLatestReviews();
 
   return (
     <main className="container">
@@ -29,7 +40,7 @@ export default async function Home() {
             "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kayak_Logo_2016.svg/2560px-Kayak_Logo_2016.svg.png",
           ].map((src, i) => (
             <div key={i} className="card p-2 flex items-center justify-center">
-              <img src={src} alt="Brand" className="h-6 sm:h-7 opacity-80" />
+              <img src={src} alt="Brand" className="h-6 sm:h-7 opacity-80" loading="lazy" />
             </div>
           ))}
         </div>
@@ -113,14 +124,17 @@ export default async function Home() {
       <section className="mt-12 fade-in">
         <h2 className="text-xl sm:text-2xl font-semibold mb-4">Đánh giá mới nhất</h2>
         <div className="grid gap-6 sm:grid-cols-3">
-          {latestReviews.map((r) => (
-            <article key={r.id} className="card p-4">
-              <h3 className="font-semibold">{r.slug}</h3>
+          {latestReviews.map((r: any) => (
+            <article key={r.id || r.slug} className="card p-4">
+              <h3 className="font-semibold">{r.slug || r.destination || "Địa điểm"}</h3>
               <p className="text-xs/6 text-foreground/70">⭐ {r.rating} • {new Date(r.date).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
               <p className="text-sm/6 mt-2">{r.comment}</p>
-              <a href={`/destinations?q=${encodeURIComponent(r.slug)}`} className="text-sm/6 underline mt-2 inline-block">Xem điểm đến →</a>
+              <a href={`/destinations?q=${encodeURIComponent(r.slug || "")}`} className="text-sm/6 underline mt-2 inline-block">Xem điểm đến →</a>
             </article>
           ))}
+          {latestReviews.length === 0 && (
+            <div className="card p-4">Chưa có đánh giá. Hãy khám phá các điểm đến nổi bật.</div>
+          )}
         </div>
       </section>
 
