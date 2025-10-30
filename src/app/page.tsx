@@ -1,6 +1,7 @@
 import SearchBar from "../components/SearchBar";
 import DestinationCard from "../components/DestinationCard";
 import HeroCarousel from "../components/HeroCarousel";
+import TopBannerCarousel from "../components/TopBannerCarousel";
 import { DESTINATIONS } from "../data/destinations";
 import { prisma } from "@/lib/prisma";
 
@@ -15,25 +16,7 @@ export default async function Home() {
     <main className="container">
       {/* Brand banner */}
       <section className="mt-6 sm:mt-10">
-        <div className="relative rounded-2xl overflow-hidden">
-          <div
-            className="h-28 sm:h-36 w-full"
-            style={{
-              background:
-                "linear-gradient(90deg, color-mix(in oklab, var(--accent) 45%, transparent), color-mix(in oklab, var(--accent-2) 45%, transparent))",
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-black text-white dark:bg-white dark:text-black font-bold">TG</span>
-              <div>
-                <div className="text-sm sm:text-base font-semibold">TravelGo</div>
-                <div className="text-xs/6 text-foreground/70">Khám phá dễ dàng, đặt chỗ nhanh chóng</div>
-              </div>
-            </div>
-            <a href="/destinations" className="btn btn-primary">Khám phá ngay</a>
-          </div>
-        </div>
+        <TopBannerCarousel />
 
         {/* Trusted brands */}
         <div className="mt-3 sm:mt-4 grid grid-cols-3 sm:grid-cols-6 gap-3">
