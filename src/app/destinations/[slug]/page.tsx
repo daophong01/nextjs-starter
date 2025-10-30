@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { DESTINATIONS } from "../../../data/destinations";
 import MapEmbed from "../../../components/MapEmbed";
 import ReviewsSection from "../../../components/ReviewsSection";
+import MapboxMap from "../../../components/MapboxMap";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const d = DESTINATIONS.find((x) => x.slug === params.slug);
@@ -20,6 +21,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: `${d.name} - ${d.country} | TravelGo`,
       description: d.description,
       images: [{ url: d.image }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${d.name} - ${d.country} | TravelGo`,
+      description: d.description,
+      images: [d.image],
     },
   };
 }
@@ -54,6 +61,8 @@ export default function DestinationDetail({
     "aggregateRating": { "@type": "AggregateRating", "ratingValue": d.rating, "bestRating": 5, "ratingCount": 100 },
     "offers": { "@type": "Offer", "price": d.price, "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
   };
+
+  const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -99,7 +108,7 @@ export default function DestinationDetail({
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        <MapEmbed query={`${d.name}, ${d.country}`} />
+        {hasMapbox ? <MapboxMap query={`${d.name}, ${d.country}`} /> : <MapEmbed query={`${d.name}, ${d.country}`} />}
         <ReviewsSection slug={d.slug} />
       </div>
 

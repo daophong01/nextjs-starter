@@ -8,6 +8,8 @@ export default function CheckoutForm({
   guests,
   from,
   to,
+  tourSlug,
+  tourName,
 }: {
   destinationSlug?: string;
   destinationName?: string;
@@ -15,6 +17,8 @@ export default function CheckoutForm({
   guests: number;
   from?: string;
   to?: string;
+  tourSlug?: string;
+  tourName?: string;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,6 +68,8 @@ export default function CheckoutForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           destination: destinationSlug,
+          tour: tourSlug,
+          tourName,
           guests,
           from,
           to,
@@ -121,15 +127,16 @@ export default function CheckoutForm({
     <div className="grid gap-6 sm:grid-cols-[1.2fr_1fr]">
       <section className="card p-4">
         <h2 className="font-semibold mb-2">Thông tin hành trình</h2>
-        {destinationName ? (
+        {(destinationName || tourName) ? (
           <div className="text-sm/6">
-            <p>Điểm đến: <span className="font-semibold">{destinationName}</span></p>
+            {destinationName && <p>Điểm đến: <span className="font-semibold">{destinationName}</span></p>}
+            {tourName && <p>Tour: <span className="font-semibold">{tourName}</span></p>}
             <p>Khách: <span className="font-semibold">{guests}</span></p>
             {from && <p>Ngày đi: <span className="font-semibold">{from}</span></p>}
             {to && <p>Ngày về: <span className="font-semibold">{to}</span></p>}
           </div>
         ) : (
-          <p className="text-sm/6 text-foreground/70">Chưa chọn điểm đến.</p>
+          <p className="text-sm/6 text-foreground/70">Chưa chọn điểm đến/tour.</p>
         )}
 
         <div className="mt-4 grid gap-3">

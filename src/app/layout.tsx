@@ -22,6 +22,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TravelGo - Du lịch thông minh",
   description: "Khám phá điểm đến, lên kế hoạch và đặt chỗ cho hành trình của bạn.",
+  openGraph: {
+    title: "TravelGo - Du lịch thông minh",
+    description: "Khám phá điểm đến, lên kế hoạch và đặt chỗ cho hành trình của bạn.",
+    images: [{ url: "/favicon.ico" }],
+    type: "website",
+    locale: "vi_VN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TravelGo - Du lịch thông minh",
+    description: "Khám phá điểm đến, lên kế hoạch và đặt chỗ cho hành trình của bạn.",
+    images: ["/favicon.ico"],
+  },
 };
 
 export default function RootLayout({

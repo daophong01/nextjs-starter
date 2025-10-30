@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { POSTS } from "@/data/blog";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Blog du lịch - TravelGo",
@@ -9,9 +10,10 @@ export const metadata: Metadata = {
     title: "Blog du lịch - TravelGo",
     description: "Kinh nghiệm, review và mẹo du lịch cập nhật.",
   },
+  twitter: { card: "summary_large_image", title: "Blog du lịch - TravelGo", description: "Kinh nghiệm, review và mẹo du lịch cập nhật." },
 };
 
-export default function BlogPage({
+export default async function BlogPage({
   searchParams,
 }: {
   searchParams?: { q?: string; tag?: string };
@@ -19,17 +21,25 @@ export default function BlogPage({
   const q = (searchParams?.q || "").toLowerCase().trim();
   const tag = (searchParams?.tag || "").toLowerCase().trim();
 
-  const filtered = POSTS.filter((p) => {
+  let data = POSTS;
+  try {
+    const list = await prisma.post.findMany({ orderBy: { date: "desc" }, take: 100 });
+    if (list.length) {
+      data = list.map((p) => ({ ...p, date: p.date.toISOString() })) as any;
+    }
+  } catch {}
+
+  const filtered = data.filter((p) => {
     const mq =
       !q ||
       p.title.toLowerCase().includes(q) ||
       p.excerpt.toLowerCase().includes(q) ||
       p.content.toLowerCase().includes(q);
-    const mt = !tag || p.tags.map((t) => t.toLowerCase()).includes(tag);
+    const mt = !tag || (p.tags || []).map((t: string) => t.toLowerCase()).includes(tag);
     return mq && mt;
   });
 
-  const tags = Array.from(new Set(POSTS.flatMap((p) => p.tags)));
+  const tags = Array.from(new Set(data.flatMap((p: any) => (p.tags || []))));
 
   return (
     <main className="container">
@@ -47,7 +57,7 @@ export default function BlogPage({
         </form>
 
         <div className="mt-6 grid gap-6 sm:grid-cols-3">
-          {filtered.map((p) => (
+          {filtered.map((p: any) => (
             <Link key={p.slug} href={`/blog/${p.slug}`} className="card overflow-hidden">
               <div className="relative h-40">
                 <img src={p.image} alt={p.title} className="h-full w-full object-cover" />

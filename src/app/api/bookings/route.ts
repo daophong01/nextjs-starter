@@ -75,6 +75,8 @@ export async function POST(request: Request) {
   const booking = await prisma.booking.create({
     data: {
       destination: data.destination,
+      tourSlug: (data as any).tour || undefined,
+      tourName: (data as any).tourName || undefined,
       guests: data.guests,
       from: data.from,
       to: data.to,
@@ -95,11 +97,12 @@ export async function POST(request: Request) {
   if (process.env.RESEND_API_KEY) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
+      const destinationText = booking.tourName || booking.destination || undefined;
       const emailHtml = render(
         BookingConfirmationEmail({
           name: booking.name,
           id: booking.id,
-          destination: booking.destination || undefined,
+          destination: destinationText,
           guests: booking.guests,
           from: booking.from || undefined,
           to: booking.to || undefined,
