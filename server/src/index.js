@@ -36,18 +36,20 @@ app.get("/api/destinations/:slug", async (req, res) => {
   return res.json(d);
 });
 
-// Reviews for destinations (simple model via Prisma Comment tied to post, or create a dedicated table if needed)
-// Here we use Comment with a special post slug mapping; for production use a Review table.
+// Reviews
 app.get("/api/reviews", async (req, res) => {
   const slug = String(req.query.slug || "");
-  if (!slug) return res.status(400).json({ error: "Missing slug" });
+  const email = String(req.query.email || "");
   try {
-    const items = await prisma.review.findMany({
-      where: { slug },
-      orderBy: { date: "desc" },
-      take: 50,
-    });
-    return res.json({ items });
+    if (slug) {
+      const items = await prisma.review.findMany({ where: { slug }, orderBy: { date: "desc" }, take: 50 });
+      return res.json({ items });
+    }
+    if (email) {
+      const items = await prisma.review.findMany({ where: { author: email }, orderBy: { date: "desc" }, take: 50 });
+      return res.json({ items });
+    }
+    return res.json({ items: [] });
   } catch {
     return res.json({ items: [] });
   }
@@ -121,6 +123,36 @@ app.post("/api/blog/comments", async (req, res) => {
   }
 });
 
+// Admin moderation for blog comments
+app.get("/api/admin/comments", async (req, res) => {
+  try {
+    const items = await prisma.comment.findMany({ orderBy: { createdAt: "desc" }, take: 200, include: { post: true } });
+    return res.json({ items });
+  } catch {
+    return res.json({ items: [] });
+  }
+});
+app.patch("/api/admin/comments", async (req, res) => {
+  const { id, approved } = req.body || {};
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    const updated = await prisma.comment.update({ where: { id }, data: { approved: !!approved } });
+    return res.json({ ok: true, item: updated });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.delete("/api/admin/comments", async (req, res) => {
+  const id = String(req.query.id || "");
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    await prisma.comment.delete({ where: { id } });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+
 // Coupons validation
 app.post("/api/coupons", async (req, res) => {
   const { code, amount } = req.body || {};
@@ -148,6 +180,16 @@ app.post("/api/coupons", async (req, res) => {
 });
 
 // Bookings
+app.get("/api/bookings", async (req, res) => {
+  const email = String(req.query.email || "");
+  try {
+    const where = email ? { email } : {};
+    const list = await prisma.booking.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+    return res.json(list);
+  } catch {
+    return res.json([]);
+  }
+});
 app.post("/api/bookings", async (req, res) => {
   const data = req.body || {};
   try {
@@ -193,6 +235,26 @@ app.post("/api/bookings", async (req, res) => {
     res.status(201).json(booking);
   } catch (e) {
     res.status(500).json({ error: "Booking failed" });
+  }
+});
+
+// Contact
+app.post("/api/contact", async (req, res) => {
+  const { name, email, message } = req.body || {};
+  if (!name || !email || !message) return res.status(400).json({ error: "Missing fields" });
+  try {
+    const saved = await prisma.contactMessage.create({ data: { name, email, message } });
+    return res.json({ ok: true, id: saved.id });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.get("/api/admin/contacts", async (req, res) => {
+  try {
+    const items = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
+    return res.json({ items });
+  } catch {
+    return res.json({ items: [] });
   }
 });
 
