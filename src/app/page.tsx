@@ -1,9 +1,15 @@
 import SearchBar from "../components/SearchBar";
 import DestinationCard from "../components/DestinationCard";
+import HeroCarousel from "../components/HeroCarousel";
 import { DESTINATIONS } from "../data/destinations";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export default async function Home() {
   const featured = DESTINATIONS.slice(0, 6);
+  const latestReviews = await prisma.review.findMany({
+    orderBy: { date: "desc" },
+    take: 3,
+  });
 
   return (
     <main className="container">
@@ -78,20 +84,15 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative rounded-2xl overflow-hidden border border-black/[.08] dark:border-white/[.145] h-64 sm:h-80">
-          <img
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop"
-            alt="Bãi biển xanh"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-            <span className="text-sm/6">Ưu đãi mùa hè</span>
-            <a href="/destinations" className="rounded-full bg-white/90 text-black px-4 py-1 text-sm/6 hover:bg-white">
-              Khám phá ngay
-            </a>
-          </div>
-        </div>
+        <HeroCarousel
+          images={[
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1549693578-d683be217e58?q=80&w=1600&auto=format&fit=crop",
+          ]}
+          ctaHref="/destinations"
+          ctaText="Khám phá ngay"
+        />
       </section>
 
       {/* Categories */}
@@ -125,6 +126,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Reviews */}
+      <section className="mt-12">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Đánh giá mới nhất</h2>
+        <div className="grid gap-6 sm:grid-cols-3">
+          {latestReviews.map((r) => (
+            <article key={r.id} className="card p-4">
+              <h3 className="font-semibold">{r.slug}</h3>
+              <p className="text-xs/6 text-foreground/70">⭐ {r.rating} • {new Date(r.date).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
+              <p className="text-sm/6 mt-2">{r.comment}</p>
+              <a href={`/destinations?q=${encodeURIComponent(r.slug)}`} className="text-sm/6 underline mt-2 inline-block">Xem điểm đến →</a>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* CTA Banner */}
       <section className="mt-12">
         <div className="card p-6 sm:p-8 text-center">
@@ -136,22 +152,6 @@ export default function Home() {
             <a href="/signup" className="btn btn-primary">Đăng ký</a>
             <a href="/signin" className="btn">Đăng nhập</a>
           </div>
-        </div>
-      </section>
-
-      {/* Stories */}
-      <section id="stories" className="mt-12">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Câu chuyện hành trình</h2>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <article key={i} className="card p-4">
-              <h3 className="font-semibold">Hành trình #{i}</h3>
-              <p className="text-sm/6 text-foreground/70 mt-1">
-                Những trải nghiệm đáng nhớ từ du khách ở Bali, Paris và Tokyo. Khám phá văn hóa, ẩm thực và thiên nhiên độc đáo.
-              </p>
-              <a href="/destinations" className="text-sm/6 underline mt-2 inline-block">Đọc thêm →</a>
-            </article>
-          ))}
         </div>
       </section>
     </main>
