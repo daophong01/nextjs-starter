@@ -36,6 +36,49 @@ app.get("/api/destinations/:slug", async (req, res) => {
   return res.json(d);
 });
 
+// Admin Destinations CRUD (Prisma)
+app.get("/api/admin/destinations", async (req, res) => {
+  try {
+    const items = await prisma.destination.findMany({ orderBy: { name: "asc" }, take: 500 });
+    return res.json({ items });
+  } catch {
+    return res.json({ items: [] });
+  }
+});
+app.post("/api/admin/destinations", async (req, res) => {
+  const { slug, name, description, image, rating, price, country, tags } = req.body || {};
+  if (!slug || !name) return res.status(400).json({ error: "Missing fields" });
+  try {
+    const created = await prisma.destination.create({
+      data: { slug, name, description: description || "", image: image || "", rating: Number(rating || 0), price: Number(price || 0), country: country || "", tags: (Array.isArray(tags) ? tags.join(",") : (tags || "")) },
+    });
+    return res.json({ ok: true, item: created });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.patch("/api/admin/destinations", async (req, res) => {
+  const { id, ...data } = req.body || {};
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    if (data.tags && Array.isArray(data.tags)) data.tags = data.tags.join(",");
+    const updated = await prisma.destination.update({ where: { id }, data });
+    return res.json({ ok: true, item: updated });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.delete("/api/admin/destinations", async (req, res) => {
+  const id = String(req.query.id || "");
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    await prisma.destination.delete({ where: { id } });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+
 // Reviews
 app.get("/api/reviews", async (req, res) => {
   const slug = String(req.query.slug || "");
@@ -62,6 +105,16 @@ app.post("/api/reviews", async (req, res) => {
       data: { slug, author, rating: Number(rating), comment: String(comment || ""), date: new Date().toISOString() },
     });
     return res.json({ ok: true, id: created.id });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.delete("/api/admin/reviews", async (req, res) => {
+  const id = String(req.query.id || "");
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    await prisma.review.delete({ where: { id } });
+    return res.json({ ok: true });
   } catch {
     return res.status(500).json({ error: "Failed" });
   }
@@ -237,6 +290,26 @@ app.post("/api/bookings", async (req, res) => {
     res.status(500).json({ error: "Booking failed" });
   }
 });
+app.patch("/api/admin/bookings", async (req, res) => {
+  const { id, status } = req.body || {};
+  if (!id || !status) return res.status(400).json({ error: "Missing fields" });
+  try {
+    const updated = await prisma.booking.update({ where: { id }, data: { status } });
+    return res.json({ ok: true, item: updated });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.delete("/api/admin/bookings", async (req, res) => {
+  const id = String(req.query.id || "");
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    await prisma.booking.delete({ where: { id } });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
 
 // Contact
 app.post("/api/contact", async (req, res) => {
@@ -255,6 +328,26 @@ app.get("/api/admin/contacts", async (req, res) => {
     return res.json({ items });
   } catch {
     return res.json({ items: [] });
+  }
+});
+app.patch("/api/admin/contacts", async (req, res) => {
+  const { id, processed } = req.body || {};
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    const updated = await prisma.contactMessage.update({ where: { id }, data: { processed: !!processed } });
+    return res.json({ ok: true, item: updated });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
+  }
+});
+app.delete("/api/admin/contacts", async (req, res) => {
+  const id = String(req.query.id || "");
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  try {
+    await prisma.contactMessage.delete({ where: { id } });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(500).json({ error: "Failed" });
   }
 });
 
