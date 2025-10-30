@@ -81,8 +81,9 @@ function DestinationsAdmin({ token }) {
   const [items, setItems] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [toast, setToast] = useState("");
 
-  const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type":"application/json" } : { "Content-Type":"application/json" };
+  const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type":"application/json", "x-csrf-token": token } : { "Content-Type":"application/json" };
 
   const load = async () => {
     const res = await fetch("/api/admin/destinations", { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).catch(()=>({ items: [] }));
@@ -90,37 +91,62 @@ function DestinationsAdmin({ token }) {
   };
   useEffect(()=>{ load(); }, []);
 
+  const uploadImage = async (file) => {
+    const fd = new FormData();
+    fd.append("folder", "destinations");
+    fd.append("file", file);
+    const res = await fetch("/api/uploads", { method:"POST", body: fd });
+    const data = await res.json();
+    if (res.ok && data?.ok) return data.url;
+    return "";
+  };
+
   const create = async (e) => {
     e.preventDefault();
+    setToast("");
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
+    if (!body.slug || !body.name) { setToast("Slug và Name là bắt buộc"); return; }
     body.rating = Number(body.rating || 0);
     body.price = Number(body.price || 0);
     body.tags = (body.tags || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const imageFile = fd.get("imageFile");
+    if (imageFile && imageFile.size) {
+      const url = await uploadImage(imageFile);
+      if (url) body.image = url;
+    }
     const res = await fetch("/api/admin/destinations", { method:"POST", headers, body: JSON.stringify(body) });
-    if (res.ok) { setShowCreate(false); e.currentTarget.reset(); load(); }
+    if (res.ok) { setShowCreate(false); e.currentTarget.reset(); load(); setToast("Tạo thành công"); } else setToast("Tạo thất bại");
   };
 
   const update = async (e) => {
     e.preventDefault();
+    setToast("");
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
     body.id = editing.id;
     body.rating = Number(body.rating || editing.rating || 0);
     body.price = Number(body.price || editing.price || 0);
     body.tags = (body.tags || editing.tags || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const imageFile = fd.get("imageFile");
+    if (imageFile && imageFile.size) {
+      const url = await uploadImage(imageFile);
+      if (url) body.image = url;
+    }
     const res = await fetch("/api/admin/destinations", { method:"PATCH", headers, body: JSON.stringify(body) });
-    if (res.ok) { setEditing(null); load(); }
+    if (res.ok) { setEditing(null); load(); setToast("Cập nhật thành công"); } else setToast("Cập nhật thất bại");
   };
 
   const remove = async (id) => {
     if (!confirm("Xóa điểm đến này?")) return;
-    await fetch(`/api/admin/destinations?id=${encodeURIComponent(id)}`, { method:"DELETE", headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`/api/admin/destinations?id=${encodeURIComponent(id)}`, { method:"DELETE", headers: { Authorization: `Bearer ${token}`, "x-csrf-token": token } });
     load();
+    setToast("Đã xóa");
   };
 
   return (
     <div>
+      {toast && <div className="fixed top-3 left-1/2 -translate-x-1/2 bg-black text-white px-3 py-2 rounded">{toast}</div>}
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Destinations</h2>
         <Button className="btn-primary" onClick={()=>setShowCreate(true)}>Create</Button>
@@ -152,6 +178,7 @@ function DestinationsAdmin({ token }) {
               <Input name="name" placeholder="name" required />
               <Input name="country" placeholder="country" />
               <Input name="image" placeholder="image url" />
+              <input name="imageFile" type="file" accept="image/*" />
               <Input name="price" placeholder="price" type="number" />
               <Input name="rating" placeholder="rating" type="number" step="0.1" />
               <Input name="tags" placeholder="tags (comma separated)" />
@@ -174,6 +201,7 @@ function DestinationsAdmin({ token }) {
               <Input name="name" placeholder="name" defaultValue={editing.name} required />
               <Input name="country" placeholder="country" defaultValue={editing.country} />
               <Input name="image" placeholder="image url" defaultValue={editing.image} />
+              <input name="imageFile" type="file" accept="image/*" />
               <Input name="price" placeholder="price" type="number" defaultValue={editing.price} />
               <Input name="rating" placeholder="rating" type="number" step="0.1" defaultValue={editing.rating} />
               <Input name="tags" placeholder="tags (comma separated)" defaultValue={editing.tags} />
@@ -340,6 +368,7 @@ function Deals() {
   const [code, setCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [couponInfo, setCouponInfo] = useState(null);
+  const [perItemDiscount, setPerItemDiscount] = useState({}); // {slug: {discount, percent, type}}
 
   useEffect(()=>{ fetch(`/api/destinations`).then(r=>r.json()).then(data=>setItems(data.items||[])).catch(()=>setItems([])); },[]);
   const dealsBase = items.filter(d=> (d.tags||[]).includes?.("beach") || (d.tags||[]).includes?.("city"));
@@ -348,35 +377,36 @@ function Deals() {
     if (!code) return;
     setApplying(true);
     try {
-      // Validate code against first item's price as reference
-      const ref = dealsBase[0]?.price || 100;
-      const res = await fetch("/api/coupons", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code, amount: ref }) });
-      const data = await res.json();
-      if (res.ok && data.valid) {
-        setCouponInfo(data);
-        setOff(data.percent || off);
-      } else {
-        setCouponInfo(null);
+      const map = {};
+      for (const d of dealsBase) {
+        const res = await fetch("/api/coupons", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code, amount: d.price }) });
+        const data = await res.json();
+        if (res.ok && data.valid) {
+          map[d.slug] = { discount: data.discount, percent: data.percent || Math.round((data.discount / d.price) * 100), type: data.type || "percentage" };
+        } else {
+          map[d.slug] = { discount: 0, percent: 0, type: "percentage" };
+        }
       }
+      setPerItemDiscount(map);
+      // For UI badge, use average percent from first item if exists
+      const first = dealsBase[0];
+      const p = first ? (map[first.slug]?.percent || off) : off;
+      setCouponInfo({ percent: p, type: map[first?.slug || ""]?.type || "percentage" });
     } catch {
       setCouponInfo(null);
+      setPerItemDiscount({});
     } finally {
       setApplying(false);
     }
   };
 
-  const computeDealPrice = (price) => {
-    if (couponInfo && code) {
-      // For percentage coupons, apply percent; for fixed, call API per item to be precise (simplified here)
-      if (couponInfo.type === "percentage") {
-        const p = Math.max(0, Math.round(price * (1 - (couponInfo.percent || off)/100)));
-        return p;
+  const computeDealPrice = (price, slug) => {
+    if (code && perItemDiscount[slug]) {
+      const info = perItemDiscount[slug];
+      if (info.type === "percentage") {
+        return Math.max(0, Math.round(price * (1 - (info.percent || 0)/100)));
       } else {
-        // approximate fixed discount proportionally based on reference
-        const ref = dealsBase[0]?.price || price;
-        const ratio = (couponInfo.discount || 0) / ref;
-        const d = Math.max(0, Math.round(price * (1 - ratio)));
-        return d;
+        return Math.max(0, price - (info.discount || 0));
       }
     }
     return Math.max(0, Math.round(price * (1 - off/100)));
@@ -386,24 +416,25 @@ function Deals() {
     <main className="container">
       <h1 className="text-2xl font-bold mt-8">Deals</h1>
       <div className="mt-3 flex items-center gap-2">
-        <Select value={off} onChange={(e)=>{ setCouponInfo(null); setOff(Number(e.target.value)); }}>
+        <Select value={off} onChange={(e)=>{ setCouponInfo(null); setPerItemDiscount({}); setOff(Number(e.target.value)); }}>
           <option value={10}>-10%</option>
           <option value={15}>-15%</option>
           <option value={20}>-20%</option>
         </Select>
-        <Badge>Ưu đãi -{off}%</Badge>
+        <Badge>Ưu đãi -{couponInfo?.percent || off}%</Badge>
         <Input value={code} onChange={(e)=>setCode(e.target.value.toUpperCase())} placeholder="Mã coupon (VD: SAVE10)" />
         <Button onClick={applyCode} className="btn-primary" disabled={applying || !code}>{applying? "Đang áp dụng..." : "Áp dụng mã"}</Button>
       </div>
-      {couponInfo && <p className="text-xs text-black/70 mt-1">Mã hợp lệ • Giảm {couponInfo.type==="percentage" ? `${couponInfo.percent}%` : `${couponInfo.discount}`} (tham chiếu).</p>}
+      {couponInfo && <p className="text-xs text-black/70 mt-1">Mã hợp lệ • Đã áp dụng cho từng điểm đến.</p>}
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {dealsBase.map(d=> {
-          const dp = computeDealPrice(d.price);
+          const dp = computeDealPrice(d.price, d.slug);
+          const percentBadge = code && perItemDiscount[d.slug] ? perItemDiscount[d.slug].percent : (couponInfo?.percent || off);
           return (
             <Card key={d.slug} className="overflow-hidden">
               <img src={d.image} alt={d.name} className="h-40 w-full object-cover"/>
               <div className="p-3">
-                <div className="font-semibold">{d.name} <Badge className="ml-2">-{couponInfo?.percent || off}%</Badge></div>
+                <div className="font-semibold">{d.name} <Badge className="ml-2">-{percentBadge}%</Badge></div>
                 <div className="mt-2 text-sm">
                   <span className="font-mono">${dp}</span>
                   <span className="ml-2 line-through opacity-60">${d.price}</span>
