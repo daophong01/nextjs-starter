@@ -117,7 +117,13 @@ jobs:
           DATABASE_URL: "mysql://root:password@127.0.0.1:3306/travelgo"
         run: npx prisma validate
 
-      - name: Smoke test - start server and curl /api/health
+      - name: Prisma migrate deploy (smoke)
+        working-directory: server
+        env:
+          DATABASE_URL: "mysql://root:password@127.0.0.1:3306/travelgo"
+        run: npx prisma migrate deploy
+
+      - name: Smoke test - start server, curl /api/health and create booking
         working-directory: server
         env:
           DATABASE_URL: "mysql://root:password@127.0.0.1:3306/travelgo"
@@ -128,4 +134,11 @@ jobs:
           node ./src/index.js & SERVER_PID=$!
           timeout 30 bash -c 'until curl -sSf http://localhost:4000/api/health > /dev/null; do sleep 1; done'
           curl -sSf http://localhost:4000/api/health || (echo "Health check failed" && exit 1)
+          # create a booking
+          curl -sSf -X POST http://localhost:4000/api/bookings \
+            -H "Content-Type: application/json" \
+            -d '{"destination":"bali","guests":2,"name":"CI User","email":"ci@example.com","price":100}' \
+            || (echo "Booking creation failed" && exit 1)
+          # verify bookings list
+          curl -sSf "http://localhost:4000/api/bookings?email=ci@example.com" | grep -q '"email":"ci@example.com"' || (echo "Booking fetch failed" && exit 1)
           kill $SERVER_PID || true
